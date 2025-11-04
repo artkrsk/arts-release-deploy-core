@@ -19,17 +19,29 @@ export const FileStatus = ({ fileUrl: initialUrl, rootElement }: IFileStatusProp
     enabled: false // We'll trigger manually when URL changes
   })
 
-  /** Monitor file input for changes */
+  /** Stable empty callback to prevent effect re-runs */
+  const noOp = React.useCallback(() => {}, [])
+
+  /** Monitor file input for changes - no callback needed, we'll use effect */
   const { currentUrl } = useFileInputMonitor({
     initialUrl,
     rootElement,
-    onUrlChange: (newUrl) => {
-      // Test file when URL changes to a GitHub URL
-      if (newUrl && newUrl.startsWith(GITHUB_PROTOCOL)) {
-        testFile(newUrl)
+    onUrlChange: noOp // Stable empty callback since we handle changes via useEffect
+  })
+
+  // Track previous URL to avoid redundant tests
+  const lastTestedUrl = React.useRef<string>('')
+
+  // Test when currentUrl changes (including initial load)
+  React.useEffect(() => {
+    if (currentUrl && currentUrl.startsWith(GITHUB_PROTOCOL)) {
+      // Only test if URL actually changed
+      if (currentUrl !== lastTestedUrl.current) {
+        lastTestedUrl.current = currentUrl
+        testFile(currentUrl)
       }
     }
-  })
+  }, [currentUrl]) // Only depend on currentUrl, not testFile
 
   // Don't show if not a GitHub file
   if (!currentUrl || !currentUrl.startsWith(GITHUB_PROTOCOL)) {

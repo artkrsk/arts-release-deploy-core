@@ -70,7 +70,34 @@ export function useFileValidation({
       // Only set error state if not aborted and still mounted
       if (!abortController.signal.aborted && isMountedRef.current) {
         setStatus('error')
-        setError(e instanceof Error ? e.message : getString('file.networkError'))
+
+        // Simplify error messages
+        let errorMessage = e instanceof Error ? e.message : getString('file.networkError')
+
+        // Simplify common error patterns
+        if (errorMessage.includes('not found in repository')) {
+          errorMessage = 'Release not found'
+        } else if (errorMessage.includes('Repository not found')) {
+          errorMessage = 'Repository not found'
+        } else if (errorMessage.includes('Asset not found')) {
+          errorMessage = 'File not found'
+        } else if (errorMessage.includes('&quot;') || errorMessage.includes('&amp;')) {
+          // Decode HTML entities if present
+          const textarea = document.createElement('textarea')
+          textarea.innerHTML = errorMessage
+          errorMessage = textarea.value
+
+          // Still simplify if it's about not found
+          if (errorMessage.includes('not found in repository')) {
+            errorMessage = 'Release not found'
+          } else if (errorMessage.includes('Repository not found')) {
+            errorMessage = 'Repository not found'
+          } else if (errorMessage.includes('Asset not found')) {
+            errorMessage = 'File not found'
+          }
+        }
+
+        setError(errorMessage)
         setErrorCode(e?.code || null)
       }
     } finally {
