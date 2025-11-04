@@ -13,7 +13,12 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./styles": {
+      "import": "./dist/index.css",
+      "require": "./dist/index.css"
+    },
+    "./styles.css": "./dist/index.css"
   },
   "files": [
     "dist",
@@ -39,6 +44,7 @@
     "@vitest/coverage-v8": "^4.0.6",
     "esbuild": "^0.25.11",
     "jsdom": "^27.1.0",
+    "sass": "^1.77.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.6"
   },
