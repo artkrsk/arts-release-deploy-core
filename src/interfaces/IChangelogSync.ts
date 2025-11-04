@@ -10,6 +10,8 @@ export interface IChangelogSyncProps {
   isProFeature?: boolean
   /** Last sync timestamp */
   lastSync?: number
-  /** Whether changelog is linked */
+  /** Whether changelog is linked (for stub/display) */
   isLinked?: boolean
+  /** Initial linked state (for full Pro implementation) */
+  initialIsLinked?: boolean
 }

@@ -15,3 +15,6 @@ export * from './hooks'
 
 // Services
 export * from './services'
+
+// Metabox
+export * from './metabox'
