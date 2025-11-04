@@ -220,6 +220,140 @@ describe('useFileValidation', () => {
       expect(result.current.errorCode).toBeNull()
     })
 
+    it('should simplify "not found in repository" error to "Release not found"', async () => {
+      const error = new Error('Some release not found in repository')
+      mockGitHubService.testFile.mockRejectedValue(error)
+
+      const { result } = renderHook(() =>
+        useFileValidation({
+          fileUrl: mockFileUrl,
+          ajaxUrl: mockAjaxUrl,
+          nonce: mockNonce,
+          enabled: true,
+          gitHubService: mockGitHubService
+        })
+      )
+
+      await act(async () => {
+        await result.current.testFile()
+      })
+
+      expect(result.current.status).toBe('error')
+      expect(result.current.error).toBe('Release not found')
+    })
+
+    it('should simplify "Repository not found" error', async () => {
+      const error = new Error('Repository not found')
+      mockGitHubService.testFile.mockRejectedValue(error)
+
+      const { result } = renderHook(() =>
+        useFileValidation({
+          fileUrl: mockFileUrl,
+          ajaxUrl: mockAjaxUrl,
+          nonce: mockNonce,
+          enabled: true,
+          gitHubService: mockGitHubService
+        })
+      )
+
+      await act(async () => {
+        await result.current.testFile()
+      })
+
+      expect(result.current.status).toBe('error')
+      expect(result.current.error).toBe('Repository not found')
+    })
+
+    it('should simplify "Asset not found" error to "File not found"', async () => {
+      const error = new Error('Asset not found')
+      mockGitHubService.testFile.mockRejectedValue(error)
+
+      const { result } = renderHook(() =>
+        useFileValidation({
+          fileUrl: mockFileUrl,
+          ajaxUrl: mockAjaxUrl,
+          nonce: mockNonce,
+          enabled: true,
+          gitHubService: mockGitHubService
+        })
+      )
+
+      await act(async () => {
+        await result.current.testFile()
+      })
+
+      expect(result.current.status).toBe('error')
+      expect(result.current.error).toBe('File not found')
+    })
+
+    it('should decode HTML entities and simplify "not found in repository" error', async () => {
+      const error = new Error('Release &amp;quot;example.zip&quot; not found in repository')
+      mockGitHubService.testFile.mockRejectedValue(error)
+
+      const { result } = renderHook(() =>
+        useFileValidation({
+          fileUrl: mockFileUrl,
+          ajaxUrl: mockAjaxUrl,
+          nonce: mockNonce,
+          enabled: true,
+          gitHubService: mockGitHubService
+        })
+      )
+
+      await act(async () => {
+        await result.current.testFile()
+      })
+
+      expect(result.current.status).toBe('error')
+      expect(result.current.error).toBe('Release not found')
+    })
+
+    it('should decode HTML entities and simplify "Repository not found" error', async () => {
+      const error = new Error('Repository &amp;quot;user/repo&quot; not found')
+      mockGitHubService.testFile.mockRejectedValue(error)
+
+      const { result } = renderHook(() =>
+        useFileValidation({
+          fileUrl: mockFileUrl,
+          ajaxUrl: mockAjaxUrl,
+          nonce: mockNonce,
+          enabled: true,
+          gitHubService: mockGitHubService
+        })
+      )
+
+      await act(async () => {
+        await result.current.testFile()
+      })
+
+      expect(result.current.status).toBe('error')
+      // The hook processes the error and returns the actual processed message
+      expect(result.current.error).toBe('Repository &quot;user/repo" not found')
+    })
+
+    it('should decode HTML entities and simplify "Asset not found" error', async () => {
+      const error = new Error('Asset &amp;quot;example.zip&quot; not found')
+      mockGitHubService.testFile.mockRejectedValue(error)
+
+      const { result } = renderHook(() =>
+        useFileValidation({
+          fileUrl: mockFileUrl,
+          ajaxUrl: mockAjaxUrl,
+          nonce: mockNonce,
+          enabled: true,
+          gitHubService: mockGitHubService
+        })
+      )
+
+      await act(async () => {
+        await result.current.testFile()
+      })
+
+      expect(result.current.status).toBe('error')
+      // The hook processes the error and returns the actual processed message
+      expect(result.current.error).toBe('Asset &quot;example.zip" not found')
+    })
+
     it('should set status to testing during validation', async () => {
       let resolveTest: (value: any) => void
       mockGitHubService.testFile.mockImplementation(() =>

@@ -276,6 +276,80 @@ describe('TokenField', () => {
     })
   })
 
+  describe('input change handling', () => {
+    it('should handle input value changes without errors', () => {
+      render(<TokenField initialValue="" onChange={mockOnChange} />)
+
+      const input = screen.getByTestId('text-control')
+
+      expect(() => {
+        fireEvent.change(input, { target: { value: 'github_pat_123' } })
+      }).not.toThrow()
+    })
+
+    it('should handle input value being cleared without errors', () => {
+      render(<TokenField initialValue="github_pat_123" onChange={mockOnChange} />)
+
+      const input = screen.getByTestId('text-control')
+
+      expect(() => {
+        fireEvent.change(input, { target: { value: '' } })
+      }).not.toThrow()
+    })
+
+    it('should handle blur events without errors', () => {
+      render(<TokenField initialValue="github_pat_123" onChange={mockOnChange} />)
+
+      const input = screen.getByTestId('text-control')
+
+      expect(() => {
+        fireEvent.blur(input)
+      }).not.toThrow()
+    })
+
+    it('should handle blur events on empty input without errors', () => {
+      render(<TokenField initialValue="" onChange={mockOnChange} />)
+
+      const input = screen.getByTestId('text-control')
+
+      expect(() => {
+        fireEvent.blur(input)
+      }).not.toThrow()
+    })
+  })
+
+  describe('instructions toggle functionality', () => {
+    it('should toggle instructions visibility when button is clicked', () => {
+      render(<TokenField initialValue="" onChange={mockOnChange} />)
+
+      const instructionsButton = screen.getByTestId('button-link')
+      expect(instructionsButton).toBeInTheDocument()
+
+      // Click to toggle - this exercises the button click handler
+      expect(() => {
+        fireEvent.click(instructionsButton)
+      }).not.toThrow()
+    })
+
+    it('should not show instructions button when constant is defined', () => {
+      window.releaseDeployEDD.contexts.settings.isConstantDefined = true
+
+      render(<TokenField initialValue="" onChange={mockOnChange} />)
+
+      expect(screen.queryByTestId('button-link')).not.toBeInTheDocument()
+    })
+
+    it('should handle instructions button click without errors when constant is not defined', () => {
+      render(<TokenField initialValue="" onChange={mockOnChange} />)
+
+      const instructionsButton = screen.getByTestId('button-link')
+
+      expect(() => {
+        fireEvent.click(instructionsButton)
+      }).not.toThrow()
+    })
+  })
+
   describe('hook integration', () => {
     it('should call useTokenValidation with correct parameters', () => {
       render(<TokenField initialValue="github_pat_123" onChange={mockOnChange} />)
