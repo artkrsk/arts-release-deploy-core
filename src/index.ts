@@ -16,5 +16,17 @@ export * from './hooks'
 // Services
 export * from './services'
 
+// Components
+export * from './components'
+
+// Settings
+export * from './settings'
+
 // Metabox
 export * from './metabox'
+
+// Version Sync (stub)
+export * from './version-sync'
+
+// Changelog Sync (stub)
+export * from './changelog-sync'

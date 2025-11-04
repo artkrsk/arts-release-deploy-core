@@ -10,6 +10,13 @@ declare global {
   /** jQuery global function */
   const jQuery: (selector: string | Element | Document) => JQuery
 
+  /** WordPress global object */
+  const wp: {
+    element: typeof import('@wordpress/element')
+    components: typeof import('@wordpress/components')
+    i18n: typeof import('@wordpress/i18n')
+  }
+
   /** Window extensions */
   interface Window {
     releaseDeployEDD: IConfig

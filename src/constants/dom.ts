@@ -18,8 +18,8 @@ export const EDD_SELECTORS = {
   /** EDD Software Licensing version field */
   VERSION_FIELD: '#edd_sl_version',
 
-  /** EDD Software Licensing changelog field */
-  CHANGELOG_FIELD: '#_edd_sl_changelog',
+  /** EDD Software Licensing changelog field (TinyMCE editor ID) */
+  CHANGELOG_FIELD: '#edd_sl_changelog',
 
   /** Label for changelog field */
   CHANGELOG_LABEL: 'label[for="edd_sl_changelog"]'

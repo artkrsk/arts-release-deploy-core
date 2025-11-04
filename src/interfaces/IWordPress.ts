@@ -89,6 +89,9 @@ export interface IConfig {
   renewSupportUrl: string
   settingsUrl: string
 
+  // Translated strings (provided by PHP backend)
+  strings?: { [key: string]: string }
+
   // Context-specific data
   contexts: {
     settings?: ISettingsContext
