@@ -21,16 +21,6 @@ describe('useFileInputMonitor', () => {
       on: vi.fn(),
       off: vi.fn()
     })
-
-    // Mock window timers
-    vi.stubGlobal('setTimeout', vi.fn((fn, delay) => {
-      return setTimeout(fn, delay)
-    }))
-    vi.stubGlobal('clearTimeout', vi.fn())
-    vi.stubGlobal('setInterval', vi.fn((fn, interval) => {
-      return setInterval(fn, interval)
-    }))
-    vi.stubGlobal('clearInterval', vi.fn())
   })
 
   afterEach(() => {

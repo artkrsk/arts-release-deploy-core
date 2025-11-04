@@ -2,14 +2,17 @@ import { expect, vi } from 'vitest'
 import '@testing-library/jest-dom'
 import React from 'react'
 
-// Mock timer globals to prevent unhandled errors during jsdom cleanup
-const mockClearInterval = vi.fn()
-global.clearInterval = mockClearInterval
-// Also add to window object for jsdom cleanup
-Object.defineProperty(window, 'clearInterval', {
-  value: mockClearInterval,
-  writable: true
-})
+// Ensure timer globals are available for jsdom cleanup
+// Don't mock them here - let individual tests use vi.useFakeTimers() when needed
+if (typeof global.clearInterval === 'undefined') {
+  global.clearInterval = vi.fn()
+}
+if (typeof window.clearInterval === 'undefined') {
+  Object.defineProperty(window, 'clearInterval', {
+    value: vi.fn(),
+    writable: true
+  })
+}
 
 // Mock WordPress globals
 global.wp = {

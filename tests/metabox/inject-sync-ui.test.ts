@@ -96,9 +96,7 @@ const mockSetTimeout = vi.fn((callback, delay) => {
   }
   return 123 // Mock timer ID
 })
-const mockClearInterval = vi.fn()
 vi.stubGlobal('setTimeout', mockSetTimeout)
-vi.stubGlobal('clearInterval', mockClearInterval)
 
 describe('inject-sync-ui', () => {
   beforeEach(() => {

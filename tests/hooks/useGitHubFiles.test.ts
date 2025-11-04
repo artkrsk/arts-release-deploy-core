@@ -13,10 +13,6 @@ describe('useGitHubFiles', () => {
 
     // Mock DOM structure
     document.body.innerHTML = ''
-
-    // Mock window timers
-    vi.stubGlobal('setInterval', vi.fn())
-    vi.stubGlobal('clearInterval', vi.fn())
   })
 
   afterEach(() => {
