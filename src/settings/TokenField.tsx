@@ -1,68 +1,32 @@
 import React from 'react'
 import type { ITokenFieldProps, IRateLimit } from '../interfaces'
 import type { TValidationStatus } from '../types'
-import { GitHubService } from '../services'
+import { useTokenValidation } from '../hooks'
 import { getString } from '../utils'
 
-const { useState, useEffect } = wp.element
+const { useState } = wp.element
 const { TextControl, Button, Notice } = wp.components
 
 export const TokenField = ({ initialValue, onChange }: ITokenFieldProps): JSX.Element => {
   const [value, setValue] = useState(initialValue)
-  const [status, setStatus] = useState<TValidationStatus>('idle')
   const [showPassword, setShowPassword] = useState(false)
-  const [rateLimit, setRateLimit] = useState<IRateLimit | null>(null)
-  const [isLoadingRateLimit, setIsLoadingRateLimit] = useState(false)
   const [showInstructions, setShowInstructions] = useState(false)
+
   const isConstantDefined = window.releaseDeployEDD.contexts.settings?.isConstantDefined || false
+  const ajaxUrl = window.releaseDeployEDD.ajaxUrl
+  const nonce = window.releaseDeployEDD.contexts.settings?.nonce || ''
 
-  useEffect(() => {
-    if (initialValue || isConstantDefined) {
-      validateToken(initialValue)
-    }
-  }, [])
-
-  const validateToken = async (token: string) => {
-    if (!token && !isConstantDefined) {
-      setStatus('idle')
-      setRateLimit(null)
-      return
-    }
-
-    setStatus('checking')
-
-    try {
-      const isValid = await GitHubService.testConnection(
-        window.releaseDeployEDD.ajaxUrl,
-        window.releaseDeployEDD.contexts.settings?.nonce || '',
-        token || ''
-      )
-
-      setStatus(isValid ? 'valid' : 'invalid')
-
-      // Fetch rate limit if connection is valid
-      if (isValid) {
-        const limit = await GitHubService.getRateLimit(
-          window.releaseDeployEDD.ajaxUrl,
-          window.releaseDeployEDD.contexts.settings?.nonce || ''
-        )
-        setRateLimit(limit)
-      } else {
-        setRateLimit(null)
-      }
-    } catch (error) {
-      setStatus('invalid')
-      setRateLimit(null)
-    }
-  }
+  /** Use validation hook for business logic */
+  const { status, rateLimit, isLoadingRateLimit, validateToken, refreshStatus } = useTokenValidation({
+    initialToken: initialValue,
+    ajaxUrl,
+    nonce,
+    isConstantDefined
+  })
 
   const handleChange = (newValue: string) => {
     setValue(newValue)
     onChange(newValue)
-
-    if (status !== 'idle') {
-      setStatus('idle')
-    }
   }
 
   const handleBlur = () => {
@@ -71,26 +35,8 @@ export const TokenField = ({ initialValue, onChange }: ITokenFieldProps): JSX.El
     }
   }
 
-  const refreshStatus = async () => {
-    if (status === 'checking' || isLoadingRateLimit) {
-      return
-    }
-
-    // Only refresh if we have a valid token
-    if (!value && !isConstantDefined) {
-      return
-    }
-
-    setIsLoadingRateLimit(true)
-
-    try {
-      // Re-validate the token (which also fetches rate limit)
-      await validateToken(value || initialValue)
-    } catch (error) {
-      // Error handling is done in validateToken
-    } finally {
-      setIsLoadingRateLimit(false)
-    }
+  const handleRefresh = async () => {
+    await refreshStatus(value || initialValue)
   }
 
   const getStatusContent = () => {
@@ -173,7 +119,7 @@ export const TokenField = ({ initialValue, onChange }: ITokenFieldProps): JSX.El
       </div>
       <div
         className={`release-deploy-edd-token-status release-deploy-edd-token-status_${status}${statusContent.isClickable ? ' release-deploy-edd-token-status_clickable' : ''}`}
-        onClick={statusContent.isClickable ? refreshStatus : undefined}
+        onClick={statusContent.isClickable ? handleRefresh : undefined}
         title={statusContent.isClickable ? getString('token.refresh') : ''}
       >
         {statusContent.icon && (
