@@ -94,6 +94,57 @@ describe('useFileValidation', () => {
       )
     })
 
+    it('should decode HTML entities in error messages', async () => {
+      const error = new Error('File &amp;quot; not found')
+      Object.assign(error, { code: 'HTML_ERROR' })
+
+      mockGitHubService.testFile.mockRejectedValue(error)
+
+      const { result } = renderHook(() =>
+        useFileValidation({
+          fileUrl: mockFileUrl,
+          ajaxUrl: mockAjaxUrl,
+          nonce: mockNonce,
+          enabled: true,
+          gitHubService: mockGitHubService
+        })
+      )
+
+      await act(async () => {
+        await result.current.testFile()
+      })
+
+      expect(result.current.status).toBe('error')
+      expect(result.current.error).toBe('File &quot; not found')
+      expect(result.current.errorCode).toBe('HTML_ERROR')
+    })
+
+    it('should not update state when component is unmounted', async () => {
+      let resolveTest: (value: any) => void
+      mockGitHubService.testFile.mockImplementation(() =>
+        new Promise(resolve => {
+          resolveTest = resolve
+        })
+      )
+
+      const { result, unmount } = renderHook(() =>
+        useFileValidation({
+          fileUrl: mockFileUrl,
+          ajaxUrl: mockAjaxUrl,
+          nonce: mockNonce,
+          enabled: true,
+          gitHubService: mockGitHubService
+        })
+      )
+
+      unmount()
+
+      // Should not throw even after unmount
+      expect(() => {
+        result.current.testFile()
+      }).not.toThrow()
+    })
+
     it('should test a custom URL if provided', async () => {
       const customUrl = 'https://github.com/other/repo/file.zip'
       mockGitHubService.testFile.mockResolvedValue(mockFileResult)
