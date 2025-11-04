@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import DOMPurify from 'dompurify'
 import type { IUseFileValidationConfig, IUseFileValidationReturn } from '../interfaces'
 import type { TStatusState } from '../types'
 import { GitHubService } from '../services'
@@ -82,9 +83,10 @@ export function useFileValidation({
         } else if (errorMessage.includes('Asset not found')) {
           errorMessage = 'File not found'
         } else if (errorMessage.includes('&quot;') || errorMessage.includes('&amp;')) {
-          // Decode HTML entities if present
+          // Decode HTML entities if present using DOMPurify (XSS-safe)
+          const sanitizedMessage = DOMPurify.sanitize(errorMessage)
           const textarea = document.createElement('textarea')
-          textarea.innerHTML = errorMessage
+          textarea.innerHTML = sanitizedMessage
           errorMessage = textarea.value
 
           // Still simplify if it's about not found
