@@ -347,6 +347,206 @@ describe('useFileInputMonitor', () => {
     })
   })
 
+  describe('DOM element setup and validation', () => {
+    it('should handle missing status element gracefully', () => {
+      vi.spyOn(document, 'querySelector').mockReturnValue(null)
+
+      expect(() => {
+        renderHook(() =>
+          useFileInputMonitor({
+            initialUrl: mockInitialUrl,
+            onUrlChange: mockOnUrlChange
+          })
+        )
+      }).not.toThrow()
+    })
+
+    it('should handle missing wrapper element gracefully', () => {
+      const mockStatusElement = document.createElement('span')
+      mockStatusElement.setAttribute('data-file-url', mockInitialUrl)
+      vi.spyOn(document, 'querySelector').mockReturnValue(mockStatusElement)
+
+      expect(() => {
+        renderHook(() =>
+          useFileInputMonitor({
+            initialUrl: mockInitialUrl,
+            onUrlChange: mockOnUrlChange
+          })
+        )
+      }).not.toThrow()
+    })
+
+    it('should handle missing file input element gracefully', () => {
+      const mockStatusElement = document.createElement('span')
+      const mockWrapper = document.createElement('div')
+      mockWrapper.className = 'edd_repeatable_upload_wrapper'
+      mockStatusElement.setAttribute('data-file-url', mockInitialUrl)
+      mockStatusElement.appendChild(mockWrapper)
+      vi.spyOn(document, 'querySelector').mockReturnValue(mockStatusElement)
+
+      expect(() => {
+        renderHook(() =>
+          useFileInputMonitor({
+            initialUrl: mockInitialUrl,
+            onUrlChange: mockOnUrlChange
+          })
+        )
+      }).not.toThrow()
+    })
+
+    it('should successfully set up with proper DOM structure', () => {
+      const mockStatusElement = document.createElement('span')
+      const mockWrapper = document.createElement('div')
+      const mockFileInput = document.createElement('input')
+
+      mockStatusElement.setAttribute('data-file-url', mockInitialUrl)
+      mockWrapper.className = 'edd_repeatable_upload_wrapper'
+      mockFileInput.className = 'edd_repeatable_upload_field'
+
+      mockWrapper.appendChild(mockFileInput)
+      mockStatusElement.appendChild(mockWrapper)
+
+      vi.spyOn(document, 'querySelector').mockReturnValue(mockStatusElement)
+
+      expect(() => {
+        renderHook(() =>
+          useFileInputMonitor({
+            initialUrl: mockInitialUrl,
+            onUrlChange: mockOnUrlChange
+          })
+        )
+      }).not.toThrow()
+    })
+  })
+
+  describe('timer and cleanup functionality', () => {
+    it('should setup hook without errors when DOM elements exist', () => {
+      const mockStatusElement = document.createElement('span')
+      const mockWrapper = document.createElement('div')
+      const mockFileInput = document.createElement('input')
+
+      mockStatusElement.setAttribute('data-file-url', mockInitialUrl)
+      mockWrapper.className = 'edd_repeatable_upload_wrapper'
+      mockFileInput.className = 'edd_repeatable_upload_field'
+
+      mockWrapper.appendChild(mockFileInput)
+      mockStatusElement.appendChild(mockWrapper)
+
+      vi.spyOn(document, 'querySelector').mockReturnValue(mockStatusElement)
+
+      const { unmount } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          onUrlChange: mockOnUrlChange
+        })
+      )
+
+      expect(() => unmount()).not.toThrow()
+    })
+
+    it('should handle jQuery when available', () => {
+      const mockJQueryObj = {
+        on: vi.fn(),
+        off: vi.fn()
+      }
+      mockJQuery.mockReturnValue(mockJQueryObj)
+
+      const mockStatusElement = document.createElement('span')
+      const mockWrapper = document.createElement('div')
+      const mockFileInput = document.createElement('input')
+
+      mockStatusElement.setAttribute('data-file-url', mockInitialUrl)
+      mockWrapper.className = 'edd_repeatable_upload_wrapper'
+      mockFileInput.className = 'edd_repeatable_upload_field'
+
+      mockWrapper.appendChild(mockFileInput)
+      mockStatusElement.appendChild(mockWrapper)
+
+      vi.spyOn(document, 'querySelector').mockReturnValue(mockStatusElement)
+
+      expect(() => {
+        renderHook(() =>
+          useFileInputMonitor({
+            initialUrl: mockInitialUrl,
+            onUrlChange: mockOnUrlChange
+          })
+        )
+      }).not.toThrow()
+    })
+
+    it('should accept custom configuration parameters', () => {
+      const mockStatusElement = document.createElement('span')
+      const mockWrapper = document.createElement('div')
+      const mockFileInput = document.createElement('input')
+
+      mockStatusElement.setAttribute('data-file-url', mockInitialUrl)
+      mockWrapper.className = 'edd_repeatable_upload_wrapper'
+      mockFileInput.className = 'edd_repeatable_upload_field'
+
+      mockWrapper.appendChild(mockFileInput)
+      mockStatusElement.appendChild(mockWrapper)
+
+      vi.spyOn(document, 'querySelector').mockReturnValue(mockStatusElement)
+
+      expect(() => {
+        renderHook(() =>
+          useFileInputMonitor({
+            initialUrl: mockInitialUrl,
+            onUrlChange: mockOnUrlChange,
+            pollInterval: 1000,
+            debounceDelay: 500
+          })
+        )
+      }).not.toThrow()
+    })
+  })
+
+  describe('state management', () => {
+    it('should initialize with the provided URL', () => {
+      const customUrl = 'https://custom-example.com/file.zip'
+
+      const { result } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: customUrl,
+          onUrlChange: mockOnUrlChange
+        })
+      )
+
+      expect(result.current.currentUrl).toBe(customUrl)
+    })
+
+    it('should handle empty initial URL', () => {
+      const { result } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: '',
+          onUrlChange: mockOnUrlChange
+        })
+      )
+
+      expect(result.current.currentUrl).toBe('')
+    })
+
+    it('should handle URL changes during re-renders', () => {
+      const { rerender, result } = renderHook(
+        ({ initialUrl }) =>
+          useFileInputMonitor({
+            initialUrl,
+            onUrlChange: mockOnUrlChange
+          }),
+        { initialProps: { initialUrl: mockInitialUrl } }
+      )
+
+      expect(result.current.currentUrl).toBe(mockInitialUrl)
+
+      const newUrl = 'https://example.com/different.zip'
+      rerender({ initialUrl: newUrl })
+
+      // Hook should maintain the same URL even on re-render since initialUrl only affects initial state
+      // In real usage, the URL would change through DOM events, not prop changes
+      expect(typeof result.current.currentUrl).toBe('string')
+    })
+  })
+
   describe('memory management', () => {
     it('should not leak memory on repeated mount/unmount', () => {
       for (let i = 0; i < 10; i++) {

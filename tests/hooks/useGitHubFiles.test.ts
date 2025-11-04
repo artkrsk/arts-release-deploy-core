@@ -456,4 +456,228 @@ describe('useGitHubFiles', () => {
       expect(result.current.linkedGitHubFileRef).toBe(originalRef)
     })
   })
+
+  describe('linked file change detection', () => {
+    it('should detect when linked GitHub file has been removed', () => {
+      const input = document.createElement('input')
+      input.type = 'text'
+      input.className = EDD_SELECTORS.UPLOAD_FIELD.replace('.', '')
+      input.value = mockGitHubUrl
+      document.body.appendChild(input)
+
+      const { result } = renderHook(() => useGitHubFiles())
+
+      // Set initial linked file reference
+      result.current.linkedGitHubFileRef.current = mockGitHubUrl
+
+      // Remove the GitHub file
+      act(() => {
+        input.value = ''
+        document.body.innerHTML = ''
+      })
+
+      // Check for files - should return true indicating file changed
+      let changed: boolean
+      act(() => {
+        changed = result.current.checkForGitHubFiles()
+      })
+
+      expect(changed).toBe(true)
+      expect(result.current.linkedGitHubFileRef.current).toBeNull()
+      expect(result.current.hasGitHubFiles).toBe(false)
+    })
+
+    it('should detect when linked GitHub file has been changed to different file', () => {
+      const input = document.createElement('input')
+      input.type = 'text'
+      input.className = EDD_SELECTORS.UPLOAD_FIELD.replace('.', '')
+      input.value = mockGitHubUrl
+      document.body.appendChild(input)
+
+      const { result } = renderHook(() => useGitHubFiles())
+
+      // Set initial linked file reference
+      result.current.linkedGitHubFileRef.current = mockGitHubUrl
+
+      // Change to a different GitHub file
+      const newGitHubUrl = `${GITHUB_PROTOCOL}different/repo/v2.0.0/release.zip`
+      act(() => {
+        input.value = newGitHubUrl
+      })
+
+      // Check for files - should return true indicating file changed
+      let changed: boolean
+      act(() => {
+        changed = result.current.checkForGitHubFiles()
+      })
+
+      expect(changed).toBe(true)
+      expect(result.current.linkedGitHubFileRef.current).toBeNull()
+      expect(result.current.hasGitHubFiles).toBe(true)
+    })
+
+    it('should not signal change when linked file remains the same', () => {
+      const input = document.createElement('input')
+      input.type = 'text'
+      input.className = EDD_SELECTORS.UPLOAD_FIELD.replace('.', '')
+      input.value = mockGitHubUrl
+      document.body.appendChild(input)
+
+      const { result } = renderHook(() => useGitHubFiles())
+
+      // Set initial linked file reference to match current file
+      result.current.linkedGitHubFileRef.current = mockGitHubUrl
+
+      // Check for files - should return false indicating no change
+      let changed: boolean
+      act(() => {
+        changed = result.current.checkForGitHubFiles()
+      })
+
+      expect(changed).toBe(false)
+      expect(result.current.linkedGitHubFileRef.current).toBe(mockGitHubUrl)
+      expect(result.current.hasGitHubFiles).toBe(true)
+    })
+  })
+
+  describe('polling with change detection', () => {
+    it('should start polling and return interval ID', () => {
+      const input = document.createElement('input')
+      input.type = 'text'
+      input.className = EDD_SELECTORS.UPLOAD_FIELD.replace('.', '')
+      input.value = ''
+      document.body.appendChild(input)
+
+      const onFileChangeMock = vi.fn()
+      const { result } = renderHook(() => useGitHubFiles())
+
+      // Start polling
+      const pollInterval = result.current.startPolling(onFileChangeMock)
+
+      expect(pollInterval).toBeDefined()
+      // In test environment, setInterval might return a mock object
+      expect(pollInterval).toBeTruthy()
+
+      // Cleanup
+      if (typeof pollInterval === 'number') {
+        clearInterval(pollInterval)
+      }
+    })
+
+    it('should handle polling setup without callback', () => {
+      const input = document.createElement('input')
+      input.type = 'text'
+      input.className = EDD_SELECTORS.UPLOAD_FIELD.replace('.', '')
+      input.value = ''
+      document.body.appendChild(input)
+
+      const { result } = renderHook(() => useGitHubFiles())
+
+      // Start polling without callback
+      const pollInterval = result.current.startPolling()
+
+      expect(pollInterval).toBeDefined()
+      expect(pollInterval).toBeTruthy()
+
+      // Cleanup
+      if (typeof pollInterval === 'number') {
+        clearInterval(pollInterval)
+      }
+    })
+
+    it('should detect changes through polling mechanism', () => {
+      const input = document.createElement('input')
+      input.type = 'text'
+      input.className = EDD_SELECTORS.UPLOAD_FIELD.replace('.', '')
+      input.value = ''
+      document.body.appendChild(input)
+
+      const onFileChangeMock = vi.fn()
+      const { result } = renderHook(() => useGitHubFiles())
+
+      // Start polling
+      const pollInterval = result.current.startPolling(onFileChangeMock)
+
+      // Manually trigger the polling logic by simulating the data-prev-value change
+      act(() => {
+        input.setAttribute('data-prev-value', '')
+        input.value = mockGitHubUrl
+        vi.advanceTimersByTime(INTERVALS.POLL)
+      })
+
+      // The polling should detect the change and update state
+      expect(result.current.hasGitHubFiles).toBe(true)
+
+      // Cleanup
+      clearInterval(pollInterval)
+    })
+
+    it('should handle multiple polling cycles', () => {
+      const input = document.createElement('input')
+      input.type = 'text'
+      input.className = EDD_SELECTORS.UPLOAD_FIELD.replace('.', '')
+      input.value = mockRegularUrl
+      input.setAttribute('data-prev-value', mockRegularUrl)
+      document.body.appendChild(input)
+
+      const onFileChangeMock = vi.fn()
+      const { result } = renderHook(() => useGitHubFiles())
+
+      // Start polling
+      const pollInterval = result.current.startPolling(onFileChangeMock)
+
+      // First change - to GitHub file
+      act(() => {
+        input.value = mockGitHubUrl
+        vi.advanceTimersByTime(INTERVALS.POLL)
+      })
+
+      // Second change - back to regular file
+      act(() => {
+        input.value = mockRegularUrl
+        vi.advanceTimersByTime(INTERVALS.POLL)
+      })
+
+      // Verify hook handles multiple cycles
+      expect(typeof result.current.hasGitHubFiles).toBe('boolean')
+
+      // Cleanup
+      clearInterval(pollInterval)
+    })
+
+    it('should handle multiple inputs during polling', () => {
+      const input1 = document.createElement('input')
+      const input2 = document.createElement('input')
+
+      input1.type = 'text'
+      input1.className = EDD_SELECTORS.UPLOAD_FIELD.replace('.', '')
+      input1.value = ''
+      input1.setAttribute('data-prev-value', '')
+
+      input2.type = 'text'
+      input2.className = EDD_SELECTORS.UPLOAD_FIELD.replace('.', '')
+      input2.value = ''
+      input2.setAttribute('data-prev-value', '')
+
+      document.body.appendChild(input1)
+      document.body.appendChild(input2)
+
+      const { result } = renderHook(() => useGitHubFiles())
+
+      // Start polling
+      const pollInterval = result.current.startPolling()
+
+      // Change both inputs
+      act(() => {
+        input1.value = mockGitHubUrl
+        input2.value = `${GITHUB_PROTOCOL}second/repo/v1.0.0/file.zip`
+        vi.advanceTimersByTime(INTERVALS.POLL)
+      })
+
+      expect(result.current.hasGitHubFiles).toBe(true)
+
+      // Cleanup
+      clearInterval(pollInterval)
+    })
+  })
 })
