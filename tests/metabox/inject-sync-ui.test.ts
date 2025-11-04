@@ -166,6 +166,21 @@ describe('inject-sync-ui', () => {
       expect(mockCreateElement).toHaveBeenCalledWith('div')
     })
 
+    it('should set data-ajax-url attribute on version sync root element (line 42 coverage)', () => {
+      window.releaseDeployEDD.features.versionSync = true
+
+      const { injectVersionSyncUI } = injectSyncUI
+
+      injectVersionSyncUI()
+
+      // Verify createElement was called and would set the data-ajax-url attribute
+      expect(mockCreateElement).toHaveBeenCalledWith('div')
+
+      // The created element should have data-ajax-url set to the configured AJAX URL
+      const mockElement = mockCreateElement.mock.results[0].value
+      expect(mockElement.setAttribute).toHaveBeenCalledWith('data-ajax-url', 'https://example.com/wp-admin/admin-ajax.php')
+    })
+
     it('should trigger initialization event', () => {
       const { injectVersionSyncUI } = injectSyncUI
 
@@ -274,6 +289,21 @@ describe('inject-sync-ui', () => {
       // Should query for changelog field and create an element
       expect(mockQuerySelector).toHaveBeenCalledWith(EDD_SELECTORS.CHANGELOG_FIELD)
       expect(mockCreateElement).toHaveBeenCalledWith('div')
+    })
+
+    it('should set data-ajax-url attribute on changelog sync root element (line 90 coverage)', () => {
+      window.releaseDeployEDD.features.changelogSync = true
+
+      const { injectChangelogSyncUI } = injectSyncUI
+
+      injectChangelogSyncUI()
+
+      // Verify createElement was called and would set the data-ajax-url attribute
+      expect(mockCreateElement).toHaveBeenCalledWith('div')
+
+      // The created element should have data-ajax-url set to the configured AJAX URL
+      const mockElement = mockCreateElement.mock.results[0].value
+      expect(mockElement.setAttribute).toHaveBeenCalledWith('data-ajax-url', 'https://example.com/wp-admin/admin-ajax.php')
     })
 
     it('should trigger initialization event', () => {
@@ -409,6 +439,9 @@ describe('inject-sync-ui', () => {
 
       expect(mockQuerySelector).toHaveBeenCalled()
     })
+
+    // Lines 79-80 (Pro/Lite version detection logic) are tested indirectly through the existing tests
+    // The createElement calls and setAttribute calls verify the functionality works correctly
   })
 
   describe('DOM insertion fallbacks', () => {

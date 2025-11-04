@@ -138,7 +138,7 @@ export const TokenField = ({ initialValue, onChange }: ITokenFieldProps): JSX.El
       )}
 
       {showInstructions && !isConstantDefined && (
-        <Notice status="info" isDismissible={false}>
+        <Notice status="info">
           <ol className="release-deploy-edd-token-instructions">
             <li>{getString('token.instruction1')}</li>
             <li>{getString('token.instruction2')}</li>

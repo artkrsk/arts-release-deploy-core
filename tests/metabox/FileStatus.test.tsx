@@ -372,6 +372,33 @@ describe('FileStatus', () => {
       // Should test the initial GitHub URL
       expect(mockUseFileValidation.testFile).toHaveBeenCalledWith(mockFileUrl)
     })
+
+    it('should track URL changes and avoid duplicate tests (line 39 coverage)', () => {
+      const { rerender } = render(<FileStatus fileUrl={mockFileUrl} />)
+
+      // Clear initial call
+      mockUseFileValidation.testFile.mockClear()
+
+      // Simulate same URL - should not trigger test due to URL tracking
+      mockUseFileInputMonitor.currentUrl = mockFileUrl
+      vi.mocked(useFileInputMonitor).mockReturnValue(mockUseFileInputMonitor)
+
+      rerender(<FileStatus fileUrl={mockFileUrl} />)
+
+      // Should not test the same URL again due to tracking logic
+      expect(mockUseFileValidation.testFile).not.toHaveBeenCalled()
+
+      // Now simulate different URL - should trigger test
+      const newUrl = `${GITHUB_PROTOCOL}owner/repo/v2.0.0/release.zip`
+      mockUseFileInputMonitor.currentUrl = newUrl
+      vi.mocked(useFileInputMonitor).mockReturnValue(mockUseFileInputMonitor)
+
+      rerender(<FileStatus fileUrl={mockFileUrl} />)
+
+      // Should test the new URL
+      expect(mockUseFileValidation.testFile).toHaveBeenCalledWith(newUrl)
+      expect(mockUseFileValidation.testFile).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('nonce handling', () => {
@@ -524,6 +551,60 @@ describe('FileStatus', () => {
 
       const proBadge = screen.getByTestId('pro-badge-warning')
       expect(proBadge).toBeInTheDocument()
+    })
+
+    it('should render ProBadge with purchase URL for pro features (line 94 coverage)', () => {
+      mockUseFileValidation.status = 'error'
+      mockUseFileValidation.errorCode = 'pro_feature'
+
+      render(<FileStatus fileUrl={mockFileUrl} />)
+
+      const proBadge = screen.getByTestId('pro-badge-default')
+      expect(proBadge).toBeInTheDocument()
+      expect(proBadge).toHaveAttribute('href', 'https://example.com/purchase')
+      expect(proBadge).toHaveTextContent('common.getPro')
+    })
+
+    it('should render ProBadge with settings URL for token errors (line 106 coverage)', () => {
+      mockUseFileValidation.status = 'error'
+      mockUseFileValidation.error = 'Invalid token provided'
+
+      render(<FileStatus fileUrl={mockFileUrl} />)
+
+      const proBadge = screen.getByTestId('pro-badge-warning')
+      expect(proBadge).toBeInTheDocument()
+      expect(proBadge).toHaveAttribute('href', 'https://example.com/settings')
+      expect(proBadge).toHaveTextContent('common.fixIt')
+    })
+
+    it('should handle missing WordPress globals gracefully', () => {
+      // Mock missing WordPress globals
+      Object.defineProperty(window, 'releaseDeployEDD', {
+        writable: true,
+        configurable: true,
+        value: {
+          ajaxUrl: mockAjaxUrl,
+          // Missing purchaseUrl and settingsUrl
+          contexts: {
+            settings: {
+              nonce: mockNonce
+            }
+          }
+        }
+      })
+
+      mockUseFileValidation.status = 'error'
+      mockUseFileValidation.errorCode = 'pro_feature'
+      mockUseFileValidation.error = 'Token authentication failed'
+
+      render(<FileStatus fileUrl={mockFileUrl} />)
+
+      const defaultBadge = screen.getByTestId('pro-badge-default')
+      const warningBadge = screen.getByTestId('pro-badge-warning')
+
+      // Should fall back to '#' when URLs are missing
+      expect(defaultBadge).toHaveAttribute('href', '#')
+      expect(warningBadge).toHaveAttribute('href', '#')
     })
   })
 })

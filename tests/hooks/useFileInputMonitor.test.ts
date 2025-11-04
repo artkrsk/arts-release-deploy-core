@@ -770,8 +770,11 @@ describe('useFileInputMonitor', () => {
       )
 
       const githubUrl = mockGitHubUrl
-      mockFileInput.value = githubUrl
-      mockFileInput.dispatchEvent(new Event('input', { bubbles: true }))
+
+      act(() => {
+        mockFileInput.value = githubUrl
+        mockFileInput.dispatchEvent(new Event('input', { bubbles: true }))
+      })
 
       // Unmount before debounce completes
       unmount()
@@ -978,8 +981,10 @@ describe('useFileInputMonitor', () => {
       )
 
       // Start a debounce timer
-      mockFileInput.value = mockGitHubUrl
-      mockFileInput.dispatchEvent(new Event('input', { bubbles: true }))
+      act(() => {
+        mockFileInput.value = mockGitHubUrl
+        mockFileInput.dispatchEvent(new Event('input', { bubbles: true }))
+      })
 
       unmount()
 
@@ -1065,6 +1070,76 @@ describe('useFileInputMonitor', () => {
 
       // Current URL should remain unchanged
       expect(result.current.currentUrl).toBe(mockInitialUrl)
+    })
+
+    it('should handle missing file input element gracefully (line 34 coverage)', () => {
+      const mockStatusElement = document.createElement('span')
+      const mockWrapper = document.createElement('div')
+
+      mockStatusElement.setAttribute('data-file-url', mockInitialUrl)
+      mockWrapper.className = 'edd_repeatable_upload_wrapper'
+      // Don't add file input element to cover line 34
+
+      mockStatusElement.appendChild(mockWrapper)
+
+      // Mock the closest method to return wrapper without file input
+      mockStatusElement.closest = vi.fn().mockReturnValue(mockWrapper)
+
+      const { result } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange
+        })
+      )
+
+      // Should still return initial URL even when file input is missing
+      expect(result.current.currentUrl).toBe(mockInitialUrl)
+      expect(mockOnUrlChange).not.toHaveBeenCalled()
+    })
+
+    it('should handle debounced callback execution with component unmount protection (line 58 coverage)', () => {
+      const mockStatusElement = document.createElement('span')
+      const mockWrapper = document.createElement('div')
+      const mockFileInput = document.createElement('input')
+
+      mockStatusElement.setAttribute('data-file-url', mockInitialUrl)
+      mockWrapper.className = 'edd_repeatable_upload_wrapper'
+      mockFileInput.className = 'edd_repeatable_upload_field'
+      mockFileInput.value = mockInitialUrl
+
+      mockWrapper.appendChild(mockFileInput)
+      mockStatusElement.appendChild(mockWrapper)
+
+      // Mock the closest method
+      mockStatusElement.closest = vi.fn().mockReturnValue(mockWrapper)
+
+      const { unmount } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange,
+          debounceDelay: 100
+        })
+      )
+
+      const githubUrl = mockGitHubUrl
+
+      act(() => {
+        mockFileInput.value = githubUrl
+        mockFileInput.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+
+      // Unmount before debounce completes to test isMountedRef.current protection
+      unmount()
+
+      // Fast-forward time - callback should not execute due to unmount protection
+      act(() => {
+        vi.advanceTimersByTime(100)
+      })
+
+      // Callback should not have been called because component was unmounted
+      expect(mockOnUrlChange).not.toHaveBeenCalled()
     })
   })
 })

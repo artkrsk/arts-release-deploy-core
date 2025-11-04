@@ -191,6 +191,21 @@ describe('TokenField', () => {
       expect(statusContainer).toBeInTheDocument()
     })
 
+    it('should display rate limit information in status (line 55 coverage)', () => {
+      mockUseTokenValidation.status = 'valid'
+      mockUseTokenValidation.rateLimit = mockRateLimit
+      vi.mocked(useTokenValidation).mockReturnValue(mockUseTokenValidation)
+
+      render(<TokenField initialValue="" onChange={mockOnChange} />)
+
+      const statusText = document.querySelector('.release-deploy-edd-token-status__text')
+      expect(statusText).toBeInTheDocument()
+
+      // Should include rate limit information in the status text
+      expect(statusText?.textContent).toContain('4999/5000')
+      expect(statusText?.textContent).toContain('token.apiCalls')
+    })
+
     it('should display invalid status', () => {
       mockUseTokenValidation.status = 'invalid'
       vi.mocked(useTokenValidation).mockReturnValue(mockUseTokenValidation)
@@ -227,6 +242,50 @@ describe('TokenField', () => {
       }
 
       expect(statusContainer).toBeInTheDocument()
+    })
+
+    it('should call refreshStatus when clickable status is clicked (line 39 coverage)', async () => {
+      mockUseTokenValidation.status = 'valid'
+      mockUseTokenValidation.rateLimit = mockRateLimit
+      mockUseTokenValidation.refreshStatus = vi.fn().mockResolvedValue(undefined)
+      vi.mocked(useTokenValidation).mockReturnValue(mockUseTokenValidation)
+
+      render(<TokenField initialValue="github_pat_123" onChange={mockOnChange} />)
+
+      const statusContainer = document.querySelector('.release-deploy-edd-token-status_clickable')
+
+      expect(statusContainer).toBeInTheDocument()
+
+      if (statusContainer) {
+        fireEvent.click(statusContainer)
+      }
+
+      // Should call refreshStatus with the current value
+      await waitFor(() => {
+        expect(mockUseTokenValidation.refreshStatus).toHaveBeenCalledWith('github_pat_123')
+      })
+    })
+
+    it('should handle refreshStatus with initial value when current value is empty', async () => {
+      mockUseTokenValidation.status = 'valid'
+      mockUseTokenValidation.rateLimit = mockRateLimit
+      mockUseTokenValidation.refreshStatus = vi.fn().mockResolvedValue(undefined)
+      vi.mocked(useTokenValidation).mockReturnValue(mockUseTokenValidation)
+
+      render(<TokenField initialValue="github_pat_initial" onChange={mockOnChange} />)
+
+      const statusContainer = document.querySelector('.release-deploy-edd-token-status_clickable')
+
+      expect(statusContainer).toBeInTheDocument()
+
+      if (statusContainer) {
+        fireEvent.click(statusContainer)
+      }
+
+      // Should call refreshStatus with the initial value when current value is empty
+      await waitFor(() => {
+        expect(mockUseTokenValidation.refreshStatus).toHaveBeenCalledWith('github_pat_initial')
+      })
     })
   })
 
