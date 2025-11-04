@@ -1,0 +1,103 @@
+// Status Indicator Styles
+
+.release-deploy-edd-file-status
+	color: var(--edd-gh-text-muted)
+	cursor: pointer
+	font-size: var(--edd-gh-font-size-normal)
+	display: inline-block
+
+	&_testing
+		color: var(--edd-gh-text-muted)
+		cursor: default
+
+	&_ready
+		color: var(--edd-gh-success)
+
+	&_error
+		color: var(--edd-gh-error)
+
+	&__message
+		border-bottom: 1px solid transparent
+		transition: border-color 0.2s
+		display: inline-flex
+		align-items: center
+		gap: 0.2em
+
+		&:hover
+			border-bottom-color: currentColor
+
+	&__upgrade-link
+		color: var(--edd-gh-accent)
+		text-decoration: none
+		font-weight: 600
+		border-bottom: 1px solid transparent
+		transition: border-color var(--edd-gh-transition-normal)
+
+		&:hover
+			border-bottom-color: var(--edd-gh-accent)
+
+// Token Field Status
+.release-deploy-edd-token-status
+	margin-top: 8px
+	font-size: var(--edd-gh-font-size-normal)
+	min-height: 20px
+	display: inline-block
+
+	&_idle
+		color: transparent
+
+	&_checking
+		color: var(--edd-gh-text-muted)
+
+	&_valid
+		color: var(--edd-gh-success)
+
+	&_invalid
+		color: var(--edd-gh-error)
+
+	&_clickable
+		cursor: pointer
+		transition: border-color 0.2s
+
+		.release-deploy-edd-token-status__text
+			border-bottom: 1px solid transparent
+			transition: border-color 0.2s
+
+		&:hover .release-deploy-edd-token-status__text
+			border-bottom-color: currentColor
+
+	&__icon
+		margin-right: 4px
+
+	&__text
+		display: inline
+
+// Password toggle button
+.release-deploy-edd-token-field
+	position: relative
+	max-width: 800px
+
+	&__toggle
+		position: absolute
+		right: 4px
+		top: 2px
+		border: none
+		background: transparent
+		cursor: pointer
+		font-size: 18px
+		padding: 4px 8px
+		line-height: 1
+
+		&:hover
+			opacity: 0.8
+
+	&__input
+		&_constant
+			font-style: italic
+
+.release-deploy-edd-token-instructions
+	margin: 10px 0
+	padding-left: 20px
+
+.release-deploy-edd-token-instructions-toggle
+	margin-bottom: 15px

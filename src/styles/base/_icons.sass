@@ -1,0 +1,25 @@
+.release-deploy-edd-icon
+  display: inline-block
+  margin-right: 4px
+  font-style: normal
+  font-weight: normal
+  line-height: 1
+
+  &::before
+    display: inline-block
+
+  // Error/Close icon (×)
+  &_error::before
+    content: '×'
+
+  // Success/Checkmark icon (✓)
+  &_success::before
+    content: '✓'
+
+  // Loading/Spinner icon (◦)
+  &_loading::before
+    content: '○'
+
+  // Back arrow icon (←)
+  &_back::before
+    content: '←'

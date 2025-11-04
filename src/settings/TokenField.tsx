@@ -129,7 +129,7 @@ export const TokenField = ({ initialValue, onChange }: ITokenFieldProps): JSX.El
       </div>
 
       {!isConstantDefined && (
-        <div className="mb-15">
+        <div className="release-deploy-edd-token-instructions-toggle">
           <Button variant="link" onClick={() => setShowInstructions(!showInstructions)}>
             {showInstructions ? '▼' : '▶'}{' '}
             {getString('token.howToCreate')}

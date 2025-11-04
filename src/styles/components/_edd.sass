@@ -1,0 +1,24 @@
+// EDD-specific styles for Easy Digital Downloads integration
+
+// EDD repeatable row styles
+.edd_repeatable_row
+	padding-bottom: 40px
+
+// EDD upload field container
+.edd_repeatable_upload_field_container
+	position: relative
+
+// GitHub file status root positioning
+.release-deploy-edd-file-status-root
+	margin-top: 0
+	font-size: var(--edd-gh-font-size-normal)
+	position: absolute
+	top: calc(100% + 6px)
+
+// Disabled checkbox wrapper with license pro badge
+.edd-check-wrapper.is-disabled
+	> *:not(.arts-license-pro-badge-root)
+		opacity: 0.5
+		pointer-events: none
+	.arts-license-pro-badge-root
+		margin-left: 8px
