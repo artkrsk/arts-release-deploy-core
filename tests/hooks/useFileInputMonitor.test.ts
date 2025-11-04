@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
-import { useFileInputMonitor } from '../../src/hooks/useFileInputMonitor'
-import { GITHUB_PROTOCOL, INTERVALS, EDD_SELECTORS } from '../../src/constants'
+import { useFileInputMonitor } from '@/hooks/useFileInputMonitor'
+import { GITHUB_PROTOCOL, INTERVALS, EDD_SELECTORS } from '@/constants'
 
 // Mock jQuery
 const mockJQuery = vi.fn()

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
-import { useTokenValidation } from '../../src/hooks/useTokenValidation'
-import type { IUseTokenValidationConfig, IRateLimit } from '../../src/interfaces'
+import { useTokenValidation } from '@/hooks/useTokenValidation'
+import type { IUseTokenValidationConfig, IRateLimit } from '@/interfaces'
 
 describe('useTokenValidation', () => {
   const mockAjaxUrl = 'https://example.com/wp-admin/admin-ajax.php'

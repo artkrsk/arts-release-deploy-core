@@ -1,28 +1,28 @@
 import React from 'react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { FileStatus } from '../../src/metabox/FileStatus'
-import type { IFileValidationResult } from '../../src/interfaces'
-import { GITHUB_PROTOCOL } from '../../src/constants'
+import { FileStatus } from '@/metabox/FileStatus'
+import type { IFileValidationResult } from '@/interfaces'
+import { GITHUB_PROTOCOL } from '@/constants'
 
 // Mock dependencies
-vi.mock('../../src/hooks/useFileValidation', () => ({
+vi.mock('@/hooks/useFileValidation', () => ({
   useFileValidation: vi.fn()
 }))
 
-vi.mock('../../src/hooks/useFileInputMonitor', () => ({
+vi.mock('@/hooks/useFileInputMonitor', () => ({
   useFileInputMonitor: vi.fn()
 }))
 
-vi.mock('../../src/utils/format', () => ({
+vi.mock('@/utils/format', () => ({
   formatSize: vi.fn((size: number) => `${size} bytes`)
 }))
 
-vi.mock('../../src/utils/getString', () => ({
+vi.mock('@/utils/getString', () => ({
   getString: vi.fn((key: string) => key)
 }))
 
-vi.mock('../../src/components/ProBadge', () => ({
+vi.mock('@/components/ProBadge', () => ({
   ProBadge: vi.fn(({ text, href, status, renderAsLink, showWrapper }) =>
     React.createElement('a', {
       href,
@@ -32,9 +32,9 @@ vi.mock('../../src/components/ProBadge', () => ({
   )
 }))
 
-import { useFileValidation } from '../../src/hooks/useFileValidation'
-import { useFileInputMonitor } from '../../src/hooks/useFileInputMonitor'
-import { formatSize } from '../../src/utils/format'
+import { useFileValidation } from '@/hooks/useFileValidation'
+import { useFileInputMonitor } from '@/hooks/useFileInputMonitor'
+import { formatSize } from '@/utils/format'
 
 describe('FileStatus', () => {
   const mockAjaxUrl = 'https://example.com/wp-admin/admin-ajax.php'

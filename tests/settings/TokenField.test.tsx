@@ -1,20 +1,20 @@
 import React from 'react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { TokenField } from '../../src/settings/TokenField'
-import type { IRateLimit } from '../../src/interfaces'
-import type { TValidationStatus } from '../../src/types'
+import { TokenField } from '@/settings/TokenField'
+import type { IRateLimit } from '@/interfaces'
+import type { TValidationStatus } from '@/types'
 
 // Mock dependencies
-vi.mock('../../src/hooks/useTokenValidation', () => ({
+vi.mock('@/hooks/useTokenValidation', () => ({
   useTokenValidation: vi.fn()
 }))
 
-vi.mock('../../src/utils/getString', () => ({
+vi.mock('@/utils/getString', () => ({
   getString: vi.fn((key: string) => key)
 }))
 
-import { useTokenValidation } from '../../src/hooks/useTokenValidation'
+import { useTokenValidation } from '@/hooks/useTokenValidation'
 
 describe('TokenField', () => {
   const mockOnChange = vi.fn()

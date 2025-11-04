@@ -1,10 +1,10 @@
 import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
-import { SettingsApp } from '../../src/settings/SettingsApp'
+import { SettingsApp } from '@/settings/SettingsApp'
 
 // Mock TokenField component
-vi.mock('../../src/settings/TokenField', () => ({
+vi.mock('@/settings/TokenField', () => ({
   TokenField: vi.fn(({ initialValue, onChange }) => (
     <div data-testid="token-field">
       <span data-testid="initial-value">{initialValue || ''}</span>
