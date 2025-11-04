@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import { SettingsApp } from '../../src/settings/SettingsApp'
 
 // Mock TokenField component
@@ -84,17 +84,19 @@ describe('SettingsApp', () => {
     let initialValue = screen.getByTestId('initial-value')
     expect(initialValue).toHaveTextContent('github_pat_existing_token')
 
-    // Trigger change
-    const changeButton = screen.getByText('Change Token')
-    changeButton.click()
+    // Trigger change within act
+    act(() => {
+      const changeButton = screen.getByText('Change Token')
+      changeButton.click()
+    })
 
     // Re-render to check state update
     rerender(<SettingsApp />)
 
     // The token state would be updated internally
     // In a real scenario, we'd need to check if TokenField is re-rendered with new value
-    // Since we're mocking, we just verify the onChange callback could be called
-    expect(changeButton).toBeInTheDocument()
+    // Since we're mocking, we just verify the component still renders
+    expect(screen.getByTestId('initial-value')).toBeInTheDocument()
   })
 
   it('should handle undefined window.releaseDeployEDD', () => {
