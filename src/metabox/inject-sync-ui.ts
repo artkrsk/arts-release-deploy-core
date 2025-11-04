@@ -21,8 +21,8 @@ export function injectVersionSyncUI(): void {
 
   // Wait for EDD SL metabox to render
   setTimeout(() => {
-    const versionField = jQuery(EDD_SELECTORS.VERSION_FIELD);
-    if (!versionField.length) {
+    const versionField = document.querySelector(EDD_SELECTORS.VERSION_FIELD) as HTMLElement;
+    if (!versionField) {
       return;
     }
 
@@ -31,31 +31,28 @@ export function injectVersionSyncUI(): void {
     const rootSuffix = isPro ? 'pro' : 'free';
 
     // Create root element for React component
-    const rootElement = jQuery(`
-      <div
-        id="release-deploy-edd-version-sync-${rootSuffix}-root"
-        class="release-deploy-edd-sync-root"
-        data-download-id="${metaboxData.downloadId}"
-        data-current-version="${versionSyncData.currentVersion || ''}"
-        data-github-version="${versionSyncData.githubVersion || ''}"
-        data-last-sync="${versionSyncData.lastSync || ''}"
-        data-nonce="${versionSyncData.nonce}"
-        data-ajax-url="${window.releaseDeployEDD?.ajaxUrl || ''}"
-      ></div>
-    `);
+    const rootElement = document.createElement('div');
+    rootElement.id = `release-deploy-edd-version-sync-${rootSuffix}-root`;
+    rootElement.className = 'release-deploy-edd-sync-root';
+    rootElement.setAttribute('data-download-id', String(metaboxData.downloadId));
+    rootElement.setAttribute('data-current-version', versionSyncData.currentVersion || '');
+    rootElement.setAttribute('data-github-version', versionSyncData.githubVersion || '');
+    rootElement.setAttribute('data-last-sync', versionSyncData.lastSync || '');
+    rootElement.setAttribute('data-nonce', versionSyncData.nonce);
+    rootElement.setAttribute('data-ajax-url', window.releaseDeployEDD?.ajaxUrl || '');
 
     // Insert after the version field
     // Try to find the text node (&nbsp;) after the input
-    const nextNode = versionField[0]?.nextSibling;
-    if (nextNode && nextNode.nodeType === 3) {
+    const nextNode = versionField.nextSibling;
+    if (nextNode && nextNode.nodeType === Node.TEXT_NODE) {
       // Text node (the &nbsp;)
-      jQuery(nextNode).after(rootElement);
+      versionField.parentNode?.insertBefore(rootElement, nextNode.nextSibling);
     } else {
-      versionField.after(rootElement);
+      versionField.parentNode?.insertBefore(rootElement, versionField.nextSibling);
     }
 
     // Trigger event to initialize React component
-    jQuery(document).trigger('release-deploy-edd-version-sync-ready');
+    document.dispatchEvent(new CustomEvent('release-deploy-edd-version-sync-ready'));
   }, 100);
 }
 
@@ -73,8 +70,8 @@ export function injectChangelogSyncUI(): void {
 
   // Wait for EDD SL metabox to render
   setTimeout(() => {
-    const changelogField = jQuery(EDD_SELECTORS.CHANGELOG_FIELD);
-    if (!changelogField.length) {
+    const changelogField = document.querySelector(EDD_SELECTORS.CHANGELOG_FIELD) as HTMLElement;
+    if (!changelogField) {
       return;
     }
 
@@ -83,28 +80,25 @@ export function injectChangelogSyncUI(): void {
     const rootSuffix = isPro ? 'pro' : 'free';
 
     // Create root element for React component
-    const rootElement = jQuery(`
-      <div
-        id="release-deploy-edd-changelog-sync-${rootSuffix}-root"
-        class="release-deploy-edd-sync-root"
-        data-download-id="${metaboxData.downloadId}"
-        data-last-sync="${changelogSyncData.lastSync || ''}"
-        data-is-linked="${changelogSyncData.isLinked ? 'true' : 'false'}"
-        data-nonce="${changelogSyncData.nonce}"
-        data-ajax-url="${window.releaseDeployEDD?.ajaxUrl || ''}"
-      ></div>
-    `);
+    const rootElement = document.createElement('div');
+    rootElement.id = `release-deploy-edd-changelog-sync-${rootSuffix}-root`;
+    rootElement.className = 'release-deploy-edd-sync-root';
+    rootElement.setAttribute('data-download-id', String(metaboxData.downloadId));
+    rootElement.setAttribute('data-last-sync', changelogSyncData.lastSync || '');
+    rootElement.setAttribute('data-is-linked', String(changelogSyncData.isLinked));
+    rootElement.setAttribute('data-nonce', changelogSyncData.nonce);
+    rootElement.setAttribute('data-ajax-url', window.releaseDeployEDD?.ajaxUrl || '');
 
     // Insert after the changelog label
-    const changelogLabel = jQuery(EDD_SELECTORS.CHANGELOG_LABEL);
-    if (changelogLabel.length) {
-      changelogLabel.append(rootElement);
+    const changelogLabel = document.querySelector(EDD_SELECTORS.CHANGELOG_LABEL) as HTMLElement;
+    if (changelogLabel) {
+      changelogLabel.appendChild(rootElement);
     } else {
       // Fallback: insert after the field itself
-      changelogField.after(rootElement);
+      changelogField.parentNode?.insertBefore(rootElement, changelogField.nextSibling);
     }
 
     // Trigger event to initialize React component
-    jQuery(document).trigger('release-deploy-edd-changelog-sync-ready');
+    document.dispatchEvent(new CustomEvent('release-deploy-edd-changelog-sync-ready'));
   }, 100);
 }

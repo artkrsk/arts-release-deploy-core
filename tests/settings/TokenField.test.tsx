@@ -350,6 +350,165 @@ describe('TokenField', () => {
     })
   })
 
+  describe('value change handling', () => {
+    it('should call onChange when input value changes', async () => {
+      render(<TokenField initialValue="" onChange={mockOnChange} />)
+
+      const textControl = screen.getByTestId('text-control')
+      fireEvent.change(textControl, { target: { value: 'github_pat_new' } })
+
+      await waitFor(() => {
+        expect(mockOnChange).toHaveBeenCalledWith('github_pat_new')
+      })
+    })
+
+    it('should call onChange when input is cleared', async () => {
+      render(<TokenField initialValue="github_pat_123" onChange={mockOnChange} />)
+
+      const textControl = screen.getByTestId('text-control')
+      fireEvent.change(textControl, { target: { value: '' } })
+
+      await waitFor(() => {
+        expect(mockOnChange).toHaveBeenCalledWith('')
+      })
+    })
+
+    it('should handle multiple value changes', async () => {
+      render(<TokenField initialValue="" onChange={mockOnChange} />)
+
+      const textControl = screen.getByTestId('text-control')
+
+      fireEvent.change(textControl, { target: { value: 'github_pat_1' } })
+      await waitFor(() => {
+        expect(mockOnChange).toHaveBeenLastCalledWith('github_pat_1')
+      })
+
+      fireEvent.change(textControl, { target: { value: 'github_pat_2' } })
+      await waitFor(() => {
+        expect(mockOnChange).toHaveBeenLastCalledWith('github_pat_2')
+      })
+
+      fireEvent.change(textControl, { target: { value: 'github_pat_final' } })
+      await waitFor(() => {
+        expect(mockOnChange).toHaveBeenLastCalledWith('github_pat_final')
+      })
+    })
+  })
+
+  describe('blur validation', () => {
+    it('should call validateToken on blur when value is present', async () => {
+      render(<TokenField initialValue="" onChange={mockOnChange} />)
+
+      const textControl = screen.getByTestId('text-control')
+      fireEvent.change(textControl, { target: { value: 'github_pat_123' } })
+
+      // Wait for value to be set
+      await waitFor(() => {
+        expect(mockOnChange).toHaveBeenCalledWith('github_pat_123')
+      })
+
+      fireEvent.blur(textControl)
+
+      expect(mockUseTokenValidation.validateToken).toHaveBeenCalledWith('github_pat_123')
+    })
+
+    it('should not call validateToken on blur when value is empty', () => {
+      render(<TokenField initialValue="" onChange={mockOnChange} />)
+
+      const textControl = screen.getByTestId('text-control')
+      fireEvent.blur(textControl)
+
+      expect(mockUseTokenValidation.validateToken).not.toHaveBeenCalled()
+    })
+
+    it('should not call validateToken on blur when value contains only whitespace', () => {
+      render(<TokenField initialValue="" onChange={mockOnChange} />)
+
+      const textControl = screen.getByTestId('text-control')
+      fireEvent.change(textControl, { target: { value: '   ' } })
+      fireEvent.blur(textControl)
+
+      expect(mockUseTokenValidation.validateToken).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('instructions button behavior', () => {
+    it('should render instructions button with correct text', () => {
+      render(<TokenField initialValue="" onChange={mockOnChange} />)
+
+      const instructionsButton = screen.getByTestId('button-link')
+      expect(instructionsButton).toBeInTheDocument()
+      expect(instructionsButton).toHaveTextContent('▶')
+      expect(instructionsButton).toHaveTextContent('token.howToCreate')
+    })
+
+    it('should toggle instructions button text when clicked', async () => {
+      render(<TokenField initialValue="" onChange={mockOnChange} />)
+
+      const instructionsButton = screen.getByTestId('button-link')
+
+      // Initially shows ▶
+      expect(instructionsButton).toHaveTextContent('▶')
+
+      // Click to show instructions
+      fireEvent.click(instructionsButton)
+
+      await waitFor(() => {
+        expect(instructionsButton).toHaveTextContent('▼')
+      })
+
+      // Click to hide instructions
+      fireEvent.click(instructionsButton)
+
+      await waitFor(() => {
+        expect(instructionsButton).toHaveTextContent('▶')
+      })
+    })
+
+    it('should show instructions when button is clicked', async () => {
+      render(<TokenField initialValue="" onChange={mockOnChange} />)
+
+      const instructionsButton = screen.getByTestId('button-link')
+
+      // Instructions should not be visible initially
+      expect(screen.queryByText('token.instruction1')).not.toBeInTheDocument()
+
+      // Click to show instructions
+      fireEvent.click(instructionsButton)
+
+      // Instructions should be visible (they're inside a Notice component)
+      await waitFor(() => {
+        expect(screen.getByText('token.instruction1')).toBeInTheDocument()
+      })
+
+      expect(screen.getByText('token.instruction2')).toBeInTheDocument()
+      expect(screen.getByText('token.instruction3')).toBeInTheDocument()
+      expect(screen.getByText('token.instruction4')).toBeInTheDocument()
+      expect(screen.getByText('token.instruction5')).toBeInTheDocument()
+      expect(screen.getByText('token.instruction6')).toBeInTheDocument()
+    })
+
+    it('should hide instructions when button is clicked twice', async () => {
+      render(<TokenField initialValue="" onChange={mockOnChange} />)
+
+      const instructionsButton = screen.getByTestId('button-link')
+
+      // Show instructions
+      fireEvent.click(instructionsButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('token.instruction1')).toBeInTheDocument()
+      })
+
+      // Hide instructions
+      fireEvent.click(instructionsButton)
+
+      await waitFor(() => {
+        expect(screen.queryByText('token.instruction1')).not.toBeInTheDocument()
+      })
+    })
+  })
+
   describe('hook integration', () => {
     it('should call useTokenValidation with correct parameters', () => {
       render(<TokenField initialValue="github_pat_123" onChange={mockOnChange} />)

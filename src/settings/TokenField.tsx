@@ -30,7 +30,7 @@ export const TokenField = ({ initialValue, onChange }: ITokenFieldProps): JSX.El
   }
 
   const handleBlur = () => {
-    if (value) {
+    if (value && value.trim()) {
       validateToken(value)
     }
   }

@@ -3,10 +3,6 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import { useFileInputMonitor } from '@/hooks/useFileInputMonitor'
 import { GITHUB_PROTOCOL, INTERVALS, EDD_SELECTORS } from '@/constants'
 
-// Mock jQuery
-const mockJQuery = vi.fn()
-global.jQuery = mockJQuery
-
 describe('useFileInputMonitor', () => {
   const mockInitialUrl = 'https://example.com/file.zip'
   const mockGitHubUrl = `${GITHUB_PROTOCOL}owner/repo/v1.0.0/release.zip`
@@ -15,12 +11,6 @@ describe('useFileInputMonitor', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.useFakeTimers()
-
-    // Mock jQuery
-    mockJQuery.mockReturnValue({
-      on: vi.fn(),
-      off: vi.fn()
-    })
   })
 
   afterEach(() => {
@@ -57,7 +47,7 @@ describe('useFileInputMonitor', () => {
       const { result } = renderHook(() =>
         useFileInputMonitor({
           initialUrl: mockInitialUrl,
-          rootElement: mockRootElement,
+          rootElement: mockStatusElement,
           onUrlChange: mockOnUrlChange
         })
       )
@@ -91,7 +81,7 @@ describe('useFileInputMonitor', () => {
       const { result } = renderHook(() =>
         useFileInputMonitor({
           initialUrl: '',
-          rootElement: mockRootElement,
+          rootElement: mockStatusElement,
           onUrlChange: mockOnUrlChange
         })
       )
@@ -115,9 +105,7 @@ describe('useFileInputMonitor', () => {
       }).not.toThrow()
     })
 
-    it('should handle missing jQuery gracefully', () => {
-      delete (global as any).jQuery
-
+    it('should handle setup without jQuery gracefully', () => {
       expect(() => {
         renderHook(() =>
           useFileInputMonitor({
@@ -444,13 +432,7 @@ describe('useFileInputMonitor', () => {
       expect(() => unmount()).not.toThrow()
     })
 
-    it('should handle jQuery when available', () => {
-      const mockJQueryObj = {
-        on: vi.fn(),
-        off: vi.fn()
-      }
-      mockJQuery.mockReturnValue(mockJQueryObj)
-
+    it('should handle native DOM event listeners', () => {
       const mockStatusElement = document.createElement('span')
       const mockWrapper = document.createElement('div')
       const mockFileInput = document.createElement('input')
@@ -562,6 +544,527 @@ describe('useFileInputMonitor', () => {
 
       // If we got here without errors, memory management is working
       expect(true).toBe(true)
+    })
+  })
+
+  describe('DOM event handling', () => {
+    let mockStatusElement: HTMLElement
+    let mockWrapper: HTMLElement
+    let mockFileInput: HTMLInputElement
+
+    beforeEach(() => {
+      mockStatusElement = document.createElement('span')
+      mockWrapper = document.createElement('div')
+      mockFileInput = document.createElement('input')
+
+      mockStatusElement.setAttribute('data-file-url', mockInitialUrl)
+      mockWrapper.className = 'edd_repeatable_upload_wrapper'
+      mockFileInput.className = 'edd_repeatable_upload_field'
+      mockFileInput.value = mockInitialUrl
+
+      mockWrapper.appendChild(mockFileInput)
+      mockStatusElement.appendChild(mockWrapper)
+
+      // Mock the closest method
+      mockStatusElement.closest = vi.fn().mockReturnValue(mockWrapper)
+    })
+
+    it('should handle input events and update currentUrl immediately', () => {
+      const { result } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange
+        })
+      )
+
+      const newUrl = 'https://example.com/new-file.zip'
+      mockFileInput.value = newUrl
+
+      // Simulate input event
+      act(() => {
+        mockFileInput.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+
+      expect(result.current.currentUrl).toBe(newUrl)
+    })
+
+    it('should handle change events and update currentUrl immediately', () => {
+      const { result } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange
+        })
+      )
+
+      const newUrl = 'https://example.com/changed-file.zip'
+      mockFileInput.value = newUrl
+
+      // Simulate change event
+      act(() => {
+        mockFileInput.dispatchEvent(new Event('change', { bubbles: true }))
+      })
+
+      expect(result.current.currentUrl).toBe(newUrl)
+    })
+
+    it('should not trigger callback for duplicate values', () => {
+      const { result } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange
+        })
+      )
+
+      // Set the same value as current
+      mockFileInput.value = mockInitialUrl
+      mockFileInput.dispatchEvent(new Event('input', { bubbles: true }))
+
+      expect(result.current.currentUrl).toBe(mockInitialUrl)
+      expect(mockOnUrlChange).not.toHaveBeenCalled()
+    })
+
+    it('should handle native change events', () => {
+      const addEventListenerSpy = vi.spyOn(mockFileInput, 'addEventListener')
+
+      renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange
+        })
+      )
+
+      // Test that native events are set up without throwing
+      expect(addEventListenerSpy).toHaveBeenCalledWith('change', expect.any(Function))
+      expect(addEventListenerSpy).toHaveBeenCalledWith('input', expect.any(Function))
+    })
+  })
+
+  describe('debouncing functionality', () => {
+    let mockStatusElement: HTMLElement
+    let mockWrapper: HTMLElement
+    let mockFileInput: HTMLInputElement
+
+    beforeEach(() => {
+      mockStatusElement = document.createElement('span')
+      mockWrapper = document.createElement('div')
+      mockFileInput = document.createElement('input')
+
+      mockStatusElement.setAttribute('data-file-url', mockInitialUrl)
+      mockWrapper.className = 'edd_repeatable_upload_wrapper'
+      mockFileInput.className = 'edd_repeatable_upload_field'
+      mockFileInput.value = mockInitialUrl
+
+      mockWrapper.appendChild(mockFileInput)
+      mockStatusElement.appendChild(mockWrapper)
+
+      // Mock the closest method
+      mockStatusElement.closest = vi.fn().mockReturnValue(mockWrapper)
+    })
+
+    it('should debounce callbacks for GitHub URLs', () => {
+      const { result } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange,
+          debounceDelay: 100
+        })
+      )
+
+      const githubUrl = mockGitHubUrl
+
+      act(() => {
+        mockFileInput.value = githubUrl
+        mockFileInput.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+
+      // URL should update immediately
+      expect(result.current.currentUrl).toBe(githubUrl)
+
+      // Callback should not be called immediately for GitHub URLs
+      expect(mockOnUrlChange).not.toHaveBeenCalled()
+
+      // Fast-forward time to trigger debounced callback
+      act(() => {
+        vi.advanceTimersByTime(100)
+      })
+
+      expect(mockOnUrlChange).toHaveBeenCalledWith(githubUrl)
+      expect(mockOnUrlChange).toHaveBeenCalledTimes(1)
+    })
+
+    it('should call callbacks immediately for non-GitHub URLs', () => {
+      const { result } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange,
+          debounceDelay: 100
+        })
+      )
+
+      const regularUrl = 'https://example.com/regular-file.zip'
+
+      act(() => {
+        mockFileInput.value = regularUrl
+        mockFileInput.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+
+      expect(result.current.currentUrl).toBe(regularUrl)
+      expect(mockOnUrlChange).toHaveBeenCalledWith(regularUrl)
+      expect(mockOnUrlChange).toHaveBeenCalledTimes(1)
+    })
+
+    it('should cancel previous debounce timer on new input', () => {
+      const { result } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange,
+          debounceDelay: 100
+        })
+      )
+
+      const githubUrl1 = `${GITHUB_PROTOCOL}owner/repo/v1.0.0/release1.zip`
+      const githubUrl2 = `${GITHUB_PROTOCOL}owner/repo/v1.0.0/release2.zip`
+
+      // First input
+      act(() => {
+        mockFileInput.value = githubUrl1
+        mockFileInput.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+
+      expect(result.current.currentUrl).toBe(githubUrl1)
+      expect(mockOnUrlChange).not.toHaveBeenCalled()
+
+      // Second input before debounce completes
+      act(() => {
+        mockFileInput.value = githubUrl2
+        mockFileInput.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+
+      expect(result.current.currentUrl).toBe(githubUrl2)
+
+      // Fast-forward time
+      act(() => {
+        vi.advanceTimersByTime(100)
+      })
+
+      // Only the latest URL should trigger callback
+      expect(mockOnUrlChange).toHaveBeenCalledWith(githubUrl2)
+      expect(mockOnUrlChange).toHaveBeenCalledTimes(1)
+    })
+
+    it('should not call callback after unmount', () => {
+      const { unmount } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange,
+          debounceDelay: 100
+        })
+      )
+
+      const githubUrl = mockGitHubUrl
+      mockFileInput.value = githubUrl
+      mockFileInput.dispatchEvent(new Event('input', { bubbles: true }))
+
+      // Unmount before debounce completes
+      unmount()
+
+      // Fast-forward time
+      act(() => {
+        vi.advanceTimersByTime(100)
+      })
+
+      expect(mockOnUrlChange).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('polling mechanism', () => {
+    let mockStatusElement: HTMLElement
+    let mockWrapper: HTMLElement
+    let mockFileInput: HTMLInputElement
+
+    beforeEach(() => {
+      mockStatusElement = document.createElement('span')
+      mockWrapper = document.createElement('div')
+      mockFileInput = document.createElement('input')
+
+      mockStatusElement.setAttribute('data-file-url', mockInitialUrl)
+      mockWrapper.className = 'edd_repeatable_upload_wrapper'
+      mockFileInput.className = 'edd_repeatable_upload_field'
+      mockFileInput.value = mockInitialUrl
+
+      mockWrapper.appendChild(mockFileInput)
+      mockStatusElement.appendChild(mockWrapper)
+
+      // Mock the closest method
+      mockStatusElement.closest = vi.fn().mockReturnValue(mockWrapper)
+    })
+
+    it('should detect value changes through polling', () => {
+      const { result } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange,
+          pollInterval: 50
+        })
+      )
+
+      // Simulate EDD changing value directly (like media library selection)
+      mockFileInput.value = 'https://example.com/poll-detected.zip'
+
+      // Fast-forward time to trigger poll
+      act(() => {
+        vi.advanceTimersByTime(50)
+      })
+
+      expect(result.current.currentUrl).toBe('https://example.com/poll-detected.zip')
+      expect(mockOnUrlChange).toHaveBeenCalledWith('https://example.com/poll-detected.zip')
+    })
+
+    it('should not trigger callback for same values during polling', () => {
+      renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange,
+          pollInterval: 50
+        })
+      )
+
+      // Value stays the same
+      mockFileInput.value = mockInitialUrl
+
+      // Fast-forward time
+      act(() => {
+        vi.advanceTimersByTime(50)
+      })
+
+      expect(mockOnUrlChange).not.toHaveBeenCalled()
+    })
+
+    it('should handle multiple rapid changes detected by polling', () => {
+      const { result } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange,
+          pollInterval: 50
+        })
+      )
+
+      // Simulate rapid value changes
+      mockFileInput.value = 'https://example.com/change1.zip'
+      act(() => {
+        vi.advanceTimersByTime(50)
+      })
+
+      expect(result.current.currentUrl).toBe('https://example.com/change1.zip')
+
+      mockFileInput.value = 'https://example.com/change2.zip'
+      act(() => {
+        vi.advanceTimersByTime(50)
+      })
+
+      expect(result.current.currentUrl).toBe('https://example.com/change2.zip')
+      expect(mockOnUrlChange).toHaveBeenCalledTimes(2)
+    })
+
+    it('should cleanup polling interval on unmount', () => {
+      const clearIntervalSpy = vi.spyOn(global, 'clearInterval')
+
+      const { unmount } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange,
+          pollInterval: 50
+        })
+      )
+
+      unmount()
+      expect(clearIntervalSpy).toHaveBeenCalled()
+    })
+  })
+
+  describe('cleanup functionality', () => {
+    let mockStatusElement: HTMLElement
+    let mockWrapper: HTMLElement
+    let mockFileInput: HTMLInputElement
+    let addEventListenerSpy: any
+    let removeEventListenerSpy: any
+
+    beforeEach(() => {
+      mockStatusElement = document.createElement('span')
+      mockWrapper = document.createElement('div')
+      mockFileInput = document.createElement('input')
+
+      mockStatusElement.setAttribute('data-file-url', mockInitialUrl)
+      mockWrapper.className = 'edd_repeatable_upload_wrapper'
+      mockFileInput.className = 'edd_repeatable_upload_field'
+      mockFileInput.value = mockInitialUrl
+
+      mockWrapper.appendChild(mockFileInput)
+      mockStatusElement.appendChild(mockWrapper)
+
+      addEventListenerSpy = vi.spyOn(mockFileInput, 'addEventListener')
+      removeEventListenerSpy = vi.spyOn(mockFileInput, 'removeEventListener')
+
+      // Mock the closest method
+      mockStatusElement.closest = vi.fn().mockReturnValue(mockWrapper)
+    })
+
+    it('should add event listeners on mount', () => {
+      renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange
+        })
+      )
+
+      expect(addEventListenerSpy).toHaveBeenCalledWith('input', expect.any(Function))
+      expect(addEventListenerSpy).toHaveBeenCalledWith('change', expect.any(Function))
+    })
+
+    it('should remove event listeners on unmount', () => {
+      const { unmount } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange
+        })
+      )
+
+      unmount()
+
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('input', expect.any(Function))
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('change', expect.any(Function))
+    })
+
+    it('should cleanup native events on unmount', () => {
+      const { unmount } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange
+        })
+      )
+
+      unmount()
+
+      // Test that native event listeners are removed
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('change', expect.any(Function))
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('input', expect.any(Function))
+    })
+
+    it('should clear debounce timer on unmount', () => {
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout')
+
+      const { unmount } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockStatusElement,
+          onUrlChange: mockOnUrlChange,
+          debounceDelay: 100
+        })
+      )
+
+      // Start a debounce timer
+      mockFileInput.value = mockGitHubUrl
+      mockFileInput.dispatchEvent(new Event('input', { bubbles: true }))
+
+      unmount()
+
+      expect(clearTimeoutSpy).toHaveBeenCalled()
+    })
+  })
+
+  describe('edge cases and error handling', () => {
+    it('should handle DOM API availability gracefully', () => {
+      const mockStatusElement = document.createElement('span')
+      const mockWrapper = document.createElement('div')
+      const mockFileInput = document.createElement('input')
+
+      mockStatusElement.setAttribute('data-file-url', mockInitialUrl)
+      mockWrapper.className = 'edd_repeatable_upload_wrapper'
+      mockFileInput.className = 'edd_repeatable_upload_field'
+
+      mockWrapper.appendChild(mockFileInput)
+      mockStatusElement.appendChild(mockWrapper)
+
+      mockStatusElement.closest = vi.fn().mockReturnValue(mockWrapper)
+
+      expect(() => {
+        renderHook(() =>
+          useFileInputMonitor({
+            initialUrl: mockInitialUrl,
+            rootElement: mockStatusElement,
+            onUrlChange: mockOnUrlChange
+          })
+        )
+      }).not.toThrow()
+    })
+
+    it('should handle null onUrlChange callback gracefully', () => {
+      const mockRootElement = document.createElement('div')
+
+      expect(() => {
+        const { result } = renderHook(() =>
+          useFileInputMonitor({
+            initialUrl: mockInitialUrl,
+            rootElement: mockRootElement,
+            onUrlChange: null as any
+          })
+        )
+
+        // Should still update state even with null callback
+        expect(result.current.currentUrl).toBe(mockInitialUrl)
+      }).not.toThrow()
+    })
+
+    it('should handle empty DOM selector results', () => {
+      vi.spyOn(document, 'querySelector').mockReturnValue(null)
+
+      const { result } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          onUrlChange: mockOnUrlChange
+        })
+      )
+
+      // Should return initial URL even when DOM setup fails
+      expect(result.current.currentUrl).toBe(mockInitialUrl)
+    })
+
+    it('should handle DOM mutations after mount', () => {
+      const mockRootElement = document.createElement('span')
+
+      // Start with a basic element (missing proper DOM structure)
+      const { result } = renderHook(() =>
+        useFileInputMonitor({
+          initialUrl: mockInitialUrl,
+          rootElement: mockRootElement,
+          onUrlChange: mockOnUrlChange
+        })
+      )
+
+      expect(result.current.currentUrl).toBe(mockInitialUrl)
+
+      // Add DOM elements after mount (shouldn't affect current instance)
+      const mockWrapper = document.createElement('div')
+      mockWrapper.className = 'edd_repeatable_upload_wrapper'
+      mockRootElement.appendChild(mockWrapper)
+
+      // Current URL should remain unchanged
+      expect(result.current.currentUrl).toBe(mockInitialUrl)
     })
   })
 })

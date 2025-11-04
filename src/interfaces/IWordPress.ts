@@ -19,9 +19,9 @@ export interface IWordPressMedia {
   [key: string]: any
 }
 
-/** EDD-specific jQuery objects for file fields */
+/** EDD-specific DOM elements for file fields */
 export interface IEDDFileFields {
-  formfield: JQuery<HTMLElement>
+  formfield: HTMLElement
   tb_remove: () => void
 }
 

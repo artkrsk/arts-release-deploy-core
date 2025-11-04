@@ -7,47 +7,7 @@ declare global {
   interface Window {
     releaseDeployEDD: any
   }
-  var jQuery: any
 }
-
-// Mock jQuery
-const mockJQueryObject = {
-  length: 1,
-  after: vi.fn((element) => element),
-  append: vi.fn((element) => element),
-  trigger: vi.fn(),
-  0: { nextSibling: { nodeType: 3 } } // Add mock for nextSibling
-}
-
-const mockDocumentJQueryObject = {
-  trigger: vi.fn()
-}
-
-const mockLabelObject = {
-  length: 1,
-  append: vi.fn((element) => element)
-}
-
-const mockJQuery = vi.fn((selector) => {
-  // If selector is document, return document mock object
-  if (selector === document) {
-    return mockDocumentJQueryObject
-  }
-  // If selector is a template string (contains HTML tags), return mock object
-  if (typeof selector === 'string' && selector.includes('<')) {
-    return mockJQueryObject // Return mock object for HTML strings
-  }
-  // If selector is for label element
-  if (selector === EDD_SELECTORS.CHANGELOG_LABEL) {
-    return mockLabelObject
-  }
-  // Return the standard mock object for all other selectors
-  return mockJQueryObject
-})
-
-// Don't mock the module since it's used as a global, just set up the global mock
-global.jQuery = mockJQuery
-;(window as any).jQuery = mockJQuery
 
 // Mock window.releaseDeployEDD
 const mockWindow = {
@@ -88,33 +48,69 @@ Object.defineProperty(window, 'releaseDeployEDD', {
 const mockSetTimeout = vi.fn((callback, delay) => {
   if (delay === 100) {
     // Execute immediately in test to avoid recursion issues
-    // Ensure jQuery global is available when callback executes
-    global.jQuery = mockJQuery
-    ;(window as any).jQuery = mockJQuery
-
     callback()
   }
   return 123 // Mock timer ID
 })
 vi.stubGlobal('setTimeout', mockSetTimeout)
 
+// Mock document.querySelector and document.createElement
+const mockCreateElement = vi.fn((tagName) => {
+  const element = {
+    id: '',
+    className: '',
+    innerHTML: '',
+    textContent: '',
+    parentNode: {
+      insertBefore: vi.fn(),
+      appendChild: vi.fn()
+    },
+    nextSibling: null,
+    setAttribute: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+    appendChild: vi.fn(),
+    insertBefore: vi.fn()
+  }
+  return element
+})
+
+const createMockElement = (hasParent = true, hasNextSibling = true) => {
+  const element = {
+    id: 'mock-field',
+    parentNode: hasParent ? {
+      insertBefore: vi.fn(),
+      appendChild: vi.fn()
+    } : null,
+    nextSibling: hasNextSibling ? { nodeType: 3 } : null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn()
+  }
+  return element
+}
+
+const mockQuerySelector = vi.fn((selector) => {
+  if (selector === EDD_SELECTORS.VERSION_FIELD) {
+    return createMockElement()
+  }
+  if (selector === EDD_SELECTORS.CHANGELOG_FIELD) {
+    return createMockElement()
+  }
+  if (selector === EDD_SELECTORS.CHANGELOG_LABEL) {
+    return {
+      appendChild: vi.fn(),
+      addEventListener: vi.fn()
+    }
+  }
+  return null
+})
+
+const mockDispatchEvent = vi.fn()
+
 describe('inject-sync-ui', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-
-    // Reset jQuery mock
-    mockJQuery.mockClear()
-    mockJQueryObject.length = 1
-    mockJQueryObject.after = vi.fn((element) => element)
-    mockJQueryObject.append = vi.fn((element) => element)
-    mockJQueryObject.trigger = vi.fn()
-    mockJQueryObject[0] = { nextSibling: { nodeType: 3 } }
-    mockDocumentJQueryObject.trigger = vi.fn()
-    mockLabelObject.append = vi.fn((element) => element)
-
-    // Ensure jQuery is available globally and on window
-    global.jQuery = mockJQuery
-    ;(window as any).jQuery = mockJQuery
 
     // Reset window mock with deep copy to avoid test pollution
     Object.defineProperty(window, 'releaseDeployEDD', {
@@ -125,6 +121,16 @@ describe('inject-sync-ui', () => {
 
     // Reset setTimeout mock
     vi.clearAllTimers()
+
+    // Reset mock implementations
+    mockQuerySelector.mockClear()
+    mockCreateElement.mockClear()
+    mockDispatchEvent.mockClear()
+
+    // Setup DOM API mocks
+    document.createElement = mockCreateElement
+    document.querySelector = mockQuerySelector
+    document.dispatchEvent = mockDispatchEvent
   })
 
   afterEach(() => {
@@ -143,10 +149,9 @@ describe('inject-sync-ui', () => {
       }).not.toThrow()
 
       // Should not query for version field or create any elements
-      expect(mockJQuery).not.toHaveBeenCalledWith(EDD_SELECTORS.VERSION_FIELD)
-      expect(mockJQueryObject.after).not.toHaveBeenCalled()
-      expect(mockJQueryObject.append).not.toHaveBeenCalled()
-      expect(mockJQueryObject.trigger).not.toHaveBeenCalled()
+      expect(mockQuerySelector).not.toHaveBeenCalledWith(EDD_SELECTORS.VERSION_FIELD)
+      expect(mockCreateElement).not.toHaveBeenCalled()
+      expect(mockDispatchEvent).not.toHaveBeenCalled()
     })
 
     it('should create root element with correct attributes for Pro version', () => {
@@ -156,11 +161,9 @@ describe('inject-sync-ui', () => {
 
       injectVersionSyncUI()
 
-      // Should query for version field and create an element (calls happen inside setTimeout)
-      expect(mockJQuery).toHaveBeenCalledWith(EDD_SELECTORS.VERSION_FIELD)
-      // The HTML template string is created and passed to jQuery
-      expect(mockJQuery).toHaveBeenCalledWith(expect.stringContaining('<div'))
-      expect(mockJQuery).toHaveBeenCalledWith(expect.stringContaining('release-deploy-edd-version-sync-pro-root'))
+      // Should query for version field and create an element
+      expect(mockQuerySelector).toHaveBeenCalledWith(EDD_SELECTORS.VERSION_FIELD)
+      expect(mockCreateElement).toHaveBeenCalledWith('div')
     })
 
     it('should trigger initialization event', () => {
@@ -168,8 +171,11 @@ describe('inject-sync-ui', () => {
 
       injectVersionSyncUI()
 
-      expect(mockJQuery).toHaveBeenCalledWith(document)
-      expect(mockDocumentJQueryObject.trigger).toHaveBeenCalledWith('release-deploy-edd-version-sync-ready')
+      expect(mockDispatchEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'release-deploy-edd-version-sync-ready'
+        })
+      )
     })
 
     it('should handle missing versionSync data gracefully', () => {
@@ -184,7 +190,7 @@ describe('inject-sync-ui', () => {
         injectVersionSyncUI()
       }).not.toThrow()
 
-      expect(mockJQuery).toHaveBeenCalled()
+      expect(mockQuerySelector).toHaveBeenCalled()
     })
 
     it('should wait for DOM rendering before injection', () => {
@@ -213,6 +219,33 @@ describe('inject-sync-ui', () => {
         injectVersionSyncUI()
       }).not.toThrow()
     })
+
+    it('should handle missing version field gracefully', () => {
+      mockQuerySelector.mockImplementation((selector) => {
+        if (selector === EDD_SELECTORS.VERSION_FIELD) {
+          return null
+        }
+        if (selector === EDD_SELECTORS.CHANGELOG_FIELD) {
+          return createMockElement()
+        }
+        if (selector === EDD_SELECTORS.CHANGELOG_LABEL) {
+          return {
+            appendChild: vi.fn(),
+            addEventListener: vi.fn()
+          }
+        }
+        return null
+      })
+
+      const { injectVersionSyncUI } = injectSyncUI
+
+      expect(() => {
+        injectVersionSyncUI()
+      }).not.toThrow()
+
+      expect(mockCreateElement).not.toHaveBeenCalled()
+      expect(mockDispatchEvent).not.toHaveBeenCalled()
+    })
   })
 
   describe('injectChangelogSyncUI', () => {
@@ -226,9 +259,9 @@ describe('inject-sync-ui', () => {
       }).not.toThrow()
 
       // Should not query for changelog field or create any elements
-      expect(mockJQuery).not.toHaveBeenCalledWith(EDD_SELECTORS.CHANGELOG_FIELD)
-      expect(mockJQueryObject.append).not.toHaveBeenCalled()
-      expect(mockJQueryObject.trigger).not.toHaveBeenCalled()
+      expect(mockQuerySelector).not.toHaveBeenCalledWith(EDD_SELECTORS.CHANGELOG_FIELD)
+      expect(mockCreateElement).not.toHaveBeenCalled()
+      expect(mockDispatchEvent).not.toHaveBeenCalled()
     })
 
     it('should create root element with correct attributes', () => {
@@ -239,10 +272,8 @@ describe('inject-sync-ui', () => {
       injectChangelogSyncUI()
 
       // Should query for changelog field and create an element
-      expect(mockJQuery).toHaveBeenCalledWith(EDD_SELECTORS.CHANGELOG_FIELD)
-      // The HTML template string is created and passed to jQuery
-      expect(mockJQuery).toHaveBeenCalledWith(expect.stringContaining('<div'))
-      expect(mockJQuery).toHaveBeenCalledWith(expect.stringContaining('release-deploy-edd-changelog-sync-pro-root'))
+      expect(mockQuerySelector).toHaveBeenCalledWith(EDD_SELECTORS.CHANGELOG_FIELD)
+      expect(mockCreateElement).toHaveBeenCalledWith('div')
     })
 
     it('should trigger initialization event', () => {
@@ -250,8 +281,11 @@ describe('inject-sync-ui', () => {
 
       injectChangelogSyncUI()
 
-      expect(mockJQuery).toHaveBeenCalledWith(document)
-      expect(mockDocumentJQueryObject.trigger).toHaveBeenCalledWith('release-deploy-edd-changelog-sync-ready')
+      expect(mockDispatchEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'release-deploy-edd-changelog-sync-ready'
+        })
+      )
     })
 
     it('should handle missing changelogSync data gracefully', () => {
@@ -266,7 +300,7 @@ describe('inject-sync-ui', () => {
         injectChangelogSyncUI()
       }).not.toThrow()
 
-      expect(mockJQuery).toHaveBeenCalled()
+      expect(mockQuerySelector).toHaveBeenCalled()
     })
 
     it('should wait for DOM rendering before injection', () => {
@@ -294,6 +328,33 @@ describe('inject-sync-ui', () => {
         injectChangelogSyncUI()
       }).not.toThrow()
     })
+
+    it('should handle missing changelog field gracefully', () => {
+      mockQuerySelector.mockImplementation((selector) => {
+        if (selector === EDD_SELECTORS.CHANGELOG_FIELD) {
+          return null
+        }
+        if (selector === EDD_SELECTORS.VERSION_FIELD) {
+          return createMockElement()
+        }
+        if (selector === EDD_SELECTORS.CHANGELOG_LABEL) {
+          return {
+            appendChild: vi.fn(),
+            addEventListener: vi.fn()
+          }
+        }
+        return null
+      })
+
+      const { injectChangelogSyncUI } = injectSyncUI
+
+      expect(() => {
+        injectChangelogSyncUI()
+      }).not.toThrow()
+
+      expect(mockCreateElement).not.toHaveBeenCalled()
+      expect(mockDispatchEvent).not.toHaveBeenCalled()
+    })
   })
 
   describe('DOM manipulation patterns', () => {
@@ -305,11 +366,10 @@ describe('inject-sync-ui', () => {
       injectVersionSyncUI()
       injectChangelogSyncUI()
 
-      // Each call queries for the field, creates HTML, queries document, and triggers
-      // Version sync: 2 calls * 4 (field query, HTML creation, nextNode query, doc query) = 8
-      // Changelog sync: 1 call * 4 (field query, HTML creation, label query, doc query) = 4
-      expect(mockJQuery).toHaveBeenCalledTimes(12)
-      expect(mockDocumentJQueryObject.trigger).toHaveBeenCalledTimes(3)
+      // Each call queries for the field, creates HTML, and triggers events
+      // Only successful injections trigger events
+      expect(mockQuerySelector).toHaveBeenCalledTimes(3)
+      expect(mockDispatchEvent).toHaveBeenCalledTimes(2)
     })
 
     it('should handle missing window.releaseDeployEDD gracefully', () => {
@@ -334,7 +394,7 @@ describe('inject-sync-ui', () => {
       injectVersionSyncUI()
       injectChangelogSyncUI()
 
-      expect(mockJQuery).toHaveBeenCalled()
+      expect(mockQuerySelector).toHaveBeenCalled()
     })
 
     it('should use Free suffix when features are not available', () => {
@@ -347,14 +407,181 @@ describe('inject-sync-ui', () => {
       injectVersionSyncUI()
       injectChangelogSyncUI()
 
-      expect(mockJQuery).toHaveBeenCalled()
+      expect(mockQuerySelector).toHaveBeenCalled()
+    })
+  })
+
+  describe('DOM insertion fallbacks', () => {
+    it('should use fallback insertion when nextSibling is not a text node', () => {
+      const customElement = {
+        parentNode: { insertBefore: vi.fn() },
+        nextSibling: { nodeType: 1, tagName: 'DIV' }, // Element node
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
+      }
+
+      mockQuerySelector.mockImplementation((selector) => {
+        if (selector === EDD_SELECTORS.VERSION_FIELD) {
+          return customElement
+        }
+        if (selector === EDD_SELECTORS.CHANGELOG_FIELD) {
+          return createMockElement()
+        }
+        if (selector === EDD_SELECTORS.CHANGELOG_LABEL) {
+          return {
+            appendChild: vi.fn(),
+            addEventListener: vi.fn()
+          }
+        }
+        return null
+      })
+
+      const { injectVersionSyncUI } = injectSyncUI
+
+      injectVersionSyncUI()
+
+      expect(mockCreateElement).toHaveBeenCalled()
+    })
+
+    it('should use fallback insertion when nextSibling is null', () => {
+      const customElement = {
+        parentNode: { insertBefore: vi.fn() },
+        nextSibling: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
+      }
+
+      mockQuerySelector.mockImplementation((selector) => {
+        if (selector === EDD_SELECTORS.VERSION_FIELD) {
+          return customElement
+        }
+        if (selector === EDD_SELECTORS.CHANGELOG_FIELD) {
+          return createMockElement()
+        }
+        if (selector === EDD_SELECTORS.CHANGELOG_LABEL) {
+          return {
+            appendChild: vi.fn(),
+            addEventListener: vi.fn()
+          }
+        }
+        return null
+      })
+
+      const { injectVersionSyncUI } = injectSyncUI
+
+      injectVersionSyncUI()
+
+      expect(mockCreateElement).toHaveBeenCalled()
+    })
+
+    it('should use fallback insertion when label is not found', () => {
+      const customFieldElement = {
+        parentNode: { insertBefore: vi.fn() },
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
+      }
+
+      mockQuerySelector.mockImplementation((selector) => {
+        if (selector === EDD_SELECTORS.CHANGELOG_FIELD) {
+          return customFieldElement
+        }
+        if (selector === EDD_SELECTORS.VERSION_FIELD) {
+          return createMockElement()
+        }
+        if (selector === EDD_SELECTORS.CHANGELOG_LABEL) {
+          return null
+        }
+        return null
+      })
+
+      const { injectChangelogSyncUI } = injectSyncUI
+
+      injectChangelogSyncUI()
+
+      expect(mockCreateElement).toHaveBeenCalled()
+    })
+
+    it('should handle proper text node insertion when nextSibling is text node', () => {
+      const customElement = {
+        parentNode: { insertBefore: vi.fn() },
+        nextSibling: { nodeType: 3, textContent: '&nbsp;' }, // Text node
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
+      }
+
+      mockQuerySelector.mockImplementation((selector) => {
+        if (selector === EDD_SELECTORS.VERSION_FIELD) {
+          return customElement
+        }
+        if (selector === EDD_SELECTORS.CHANGELOG_FIELD) {
+          return createMockElement()
+        }
+        if (selector === EDD_SELECTORS.CHANGELOG_LABEL) {
+          return {
+            appendChild: vi.fn(),
+            addEventListener: vi.fn()
+          }
+        }
+        return null
+      })
+
+      const { injectVersionSyncUI } = injectSyncUI
+
+      injectVersionSyncUI()
+
+      expect(mockCreateElement).toHaveBeenCalled()
+    })
+
+    it('should handle proper label insertion when label is found', () => {
+      const customFieldElement = {
+        parentNode: { insertBefore: vi.fn() },
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
+      }
+
+      const customLabelElement = {
+        appendChild: vi.fn(),
+        addEventListener: vi.fn()
+      }
+
+      mockQuerySelector.mockImplementation((selector) => {
+        if (selector === EDD_SELECTORS.CHANGELOG_FIELD) {
+          return customFieldElement
+        }
+        if (selector === EDD_SELECTORS.VERSION_FIELD) {
+          return createMockElement()
+        }
+        if (selector === EDD_SELECTORS.CHANGELOG_LABEL) {
+          return customLabelElement
+        }
+        return null
+      })
+
+      const { injectChangelogSyncUI } = injectSyncUI
+
+      injectChangelogSyncUI()
+
+      expect(mockCreateElement).toHaveBeenCalled()
     })
   })
 
   describe('error handling and edge cases', () => {
-    
-    it('should handle jQuery selector failures gracefully', () => {
-      mockJQueryObject.length = 0
+    it('should handle DOM selector failures gracefully', () => {
+      mockQuerySelector.mockImplementation((selector) => {
+        if (selector === EDD_SELECTORS.VERSION_FIELD) {
+          return null
+        }
+        if (selector === EDD_SELECTORS.CHANGELOG_FIELD) {
+          return createMockElement()
+        }
+        if (selector === EDD_SELECTORS.CHANGELOG_LABEL) {
+          return {
+            appendChild: vi.fn(),
+            addEventListener: vi.fn()
+          }
+        }
+        return null
+      })
 
       const { injectVersionSyncUI } = injectSyncUI
 
@@ -363,8 +590,8 @@ describe('inject-sync-ui', () => {
       }).not.toThrow()
 
       // Verify it was called but didn't proceed with DOM manipulation
-      expect(mockJQuery).toHaveBeenCalledWith(EDD_SELECTORS.VERSION_FIELD)
-      expect(mockJQueryObject.after).not.toHaveBeenCalled()
+      expect(mockQuerySelector).toHaveBeenCalledWith(EDD_SELECTORS.VERSION_FIELD)
+      expect(mockCreateElement).not.toHaveBeenCalled()
     })
 
     it('should handle empty metabox data object', () => {

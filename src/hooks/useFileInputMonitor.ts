@@ -4,7 +4,7 @@ import { GITHUB_PROTOCOL, INTERVALS, EDD_SELECTORS } from '../constants'
 
 /**
  * Custom hook for monitoring EDD file input changes
- * Handles event listeners, jQuery changes, and polling
+ * Handles event listeners and polling
  * Separates DOM interaction logic from FileStatus component
  *
  * @param config - Configuration object
@@ -69,11 +69,8 @@ export function useFileInputMonitor({
     fileInput.addEventListener('input', handleInputChange)
     fileInput.addEventListener('change', handleInputChange)
 
-    // Also listen for jQuery change events (EDD uses jQuery)
-    jQuery(fileInput).on('change input', handleInputChange)
-
     // Polling to catch EDD's media library selections
-    // EDD uses jQuery .val() without triggering change events
+    // EDD changes input values directly without triggering change events
     const poll = window.setInterval(() => {
       const currentValue = fileInput.value
       if (currentValue !== lastValue) {
@@ -90,7 +87,6 @@ export function useFileInputMonitor({
       clearInterval(poll)
       fileInput.removeEventListener('input', handleInputChange)
       fileInput.removeEventListener('change', handleInputChange)
-      jQuery(fileInput).off('change input')
     }
   }, [rootElement, initialUrl, onUrlChange, debounceDelay, pollInterval])
 

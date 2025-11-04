@@ -14,7 +14,7 @@ if (typeof window.clearInterval === 'undefined') {
   })
 }
 
-// Mock WordPress globals
+// Mock WordPress globals with enhanced component support
 global.wp = {
   element: {
     useState: React.useState,
@@ -26,18 +26,36 @@ global.wp = {
     unmountComponentAtNode: vi.fn()
   },
   components: {
-    TextControl: vi.fn(() => React.createElement('div', {},
-      React.createElement('input', {
+    TextControl: vi.fn(({ value, onChange, type = 'text', label, disabled = false, ...props }) => {
+      return React.createElement('input', {
         'data-testid': 'text-control',
-        type: 'password'
+        type,
+        value: value || '',
+        disabled,
+        onChange: (e: any) => onChange && onChange(e.target.value),
+        ...props
       })
-    )),
-    Button: vi.fn(({ children, variant }) => React.createElement('button', {
-      'data-testid': `button-${variant || 'link'}`
-    }, children || `▶ token.howToCreate`)),
-    Notice: vi.fn(({ children }) => React.createElement('div', {
-      'data-testid': 'notice-info',
-      className: 'components-notice'
-    }, children))
+    }),
+    Button: vi.fn(({ children, onClick, variant = 'primary', disabled = false, ...props }) => {
+      return React.createElement('button', {
+        'data-testid': `button-${variant}`,
+        onClick,
+        disabled,
+        ...props
+      }, children)
+    }),
+    Notice: vi.fn(({ children, status = 'info', onRemove, ...props }) => {
+      return React.createElement('div', {
+        'data-testid': `notice-${status}`,
+        className: `components-notice is-${status}`,
+        ...props
+      }, children)
+    }),
+    BaseControl: vi.fn(({ label, children, ...props }) => {
+      return React.createElement('div', {
+        'data-testid': 'base-control',
+        ...props
+      }, [label && React.createElement('label', { key: 'label' }, label), children])
+    })
   }
 }

@@ -349,6 +349,29 @@ describe('FileStatus', () => {
       // Should only test once (not twice for same URL)
       expect(mockUseFileValidation.testFile).toHaveBeenCalledTimes(1)
     })
+
+    it('should track URL changes and avoid duplicate tests', () => {
+      const { rerender } = render(<FileStatus fileUrl={mockFileUrl} />)
+
+      // Clear initial call
+      mockUseFileValidation.testFile.mockClear()
+
+      // Simulate URL change
+      const newUrl = `${GITHUB_PROTOCOL}owner/repo/v2.0.0/release.zip`
+      mockUseFileInputMonitor.currentUrl = newUrl
+      vi.mocked(useFileInputMonitor).mockReturnValue(mockUseFileInputMonitor)
+      rerender(<FileStatus fileUrl={mockFileUrl} />)
+
+      // Should test the new URL
+      expect(mockUseFileValidation.testFile).toHaveBeenCalledWith(newUrl)
+    })
+
+    it('should test URL immediately when component mounts with GitHub URL', () => {
+      render(<FileStatus fileUrl={mockFileUrl} />)
+
+      // Should test the initial GitHub URL
+      expect(mockUseFileValidation.testFile).toHaveBeenCalledWith(mockFileUrl)
+    })
   })
 
   describe('nonce handling', () => {
@@ -436,6 +459,26 @@ describe('FileStatus', () => {
 
       const statusElement = document.querySelector('.release-deploy-edd-file-status_error')
       expect(statusElement).toBeInTheDocument()
+    })
+
+    it('should not show warning ProBadge when error is empty or null', () => {
+      mockUseFileValidation.status = 'error'
+      mockUseFileValidation.error = ''
+      mockUseFileValidation.errorCode = 'some_error'
+
+      render(<FileStatus fileUrl={mockFileUrl} />)
+
+      expect(screen.queryByTestId('pro-badge-warning')).not.toBeInTheDocument()
+    })
+
+    it('should not show warning ProBadge when error does not contain token keyword', () => {
+      mockUseFileValidation.status = 'error'
+      mockUseFileValidation.error = 'File not found'
+      mockUseFileValidation.errorCode = 'not_found'
+
+      render(<FileStatus fileUrl={mockFileUrl} />)
+
+      expect(screen.queryByTestId('pro-badge-warning')).not.toBeInTheDocument()
     })
   })
 

@@ -679,5 +679,145 @@ describe('useGitHubFiles', () => {
       // Cleanup
       clearInterval(pollInterval)
     })
+
+    it('should handle polling callback functionality', () => {
+      const input = document.createElement('input')
+      input.type = 'text'
+      input.className = EDD_SELECTORS.UPLOAD_FIELD.replace('.', '')
+      input.value = ''
+      input.setAttribute('data-prev-value', '')
+      document.body.appendChild(input)
+
+      const onFileChangeMock = vi.fn()
+      const { result } = renderHook(() => useGitHubFiles())
+
+      // Start polling with callback - should not throw
+      const pollInterval = result.current.startPolling(onFileChangeMock)
+
+      expect(pollInterval).toBeDefined()
+
+      // Cleanup
+      clearInterval(pollInterval)
+    })
+
+    it('should not call onFileChange callback when no GitHub files detected', () => {
+      const input = document.createElement('input')
+      input.type = 'text'
+      input.className = EDD_SELECTORS.UPLOAD_FIELD.replace('.', '')
+      input.value = ''
+      input.setAttribute('data-prev-value', '')
+      document.body.appendChild(input)
+
+      const onFileChangeMock = vi.fn()
+      const { result } = renderHook(() => useGitHubFiles())
+
+      // Start polling with callback
+      const pollInterval = result.current.startPolling(onFileChangeMock)
+
+      // Change input value to regular URL
+      act(() => {
+        input.value = mockRegularUrl
+        vi.advanceTimersByTime(INTERVALS.POLL)
+      })
+
+      expect(onFileChangeMock).not.toHaveBeenCalled()
+
+      // Cleanup
+      clearInterval(pollInterval)
+    })
+
+    it('should not call onFileChange when checkForGitHubFiles returns false', () => {
+      const input = document.createElement('input')
+      input.type = 'text'
+      input.className = EDD_SELECTORS.UPLOAD_FIELD.replace('.', '')
+      input.value = ''
+      input.setAttribute('data-prev-value', '')
+      document.body.appendChild(input)
+
+      const onFileChangeMock = vi.fn()
+      const { result } = renderHook(() => useGitHubFiles())
+
+      // Start polling with callback
+      const pollInterval = result.current.startPolling(onFileChangeMock)
+
+      // Change input to regular URL (checkForGitHubFiles will return false)
+      act(() => {
+        input.value = mockRegularUrl
+        vi.advanceTimersByTime(INTERVALS.POLL)
+      })
+
+      expect(onFileChangeMock).not.toHaveBeenCalled()
+
+      // Cleanup
+      clearInterval(pollInterval)
+    })
+  })
+
+  describe('linked file ref edge cases', () => {
+    it('should handle null linkedGitHubFileRef gracefully', () => {
+      const input = document.createElement('input')
+      input.type = 'text'
+      input.className = EDD_SELECTORS.UPLOAD_FIELD.replace('.', '')
+      input.value = mockGitHubUrl
+      document.body.appendChild(input)
+
+      const { result } = renderHook(() => useGitHubFiles())
+
+      // Set linked ref to null
+      result.current.linkedGitHubFileRef.current = null
+
+      // Check should not throw and should return false (no change detected)
+      let changed: boolean
+      act(() => {
+        changed = result.current.checkForGitHubFiles()
+      })
+
+      expect(changed).toBe(false)
+      expect(result.current.hasGitHubFiles).toBe(true)
+    })
+
+    it('should handle undefined linkedGitHubFileRef gracefully', () => {
+      const input = document.createElement('input')
+      input.type = 'text'
+      input.className = EDD_SELECTORS.UPLOAD_FIELD.replace('.', '')
+      input.value = mockGitHubUrl
+      document.body.appendChild(input)
+
+      const { result } = renderHook(() => useGitHubFiles())
+
+      // Set linked ref to undefined
+      result.current.linkedGitHubFileRef.current = undefined
+
+      // Check should not throw and should return false (no change detected)
+      let changed: boolean
+      act(() => {
+        changed = result.current.checkForGitHubFiles()
+      })
+
+      expect(changed).toBe(false)
+      expect(result.current.hasGitHubFiles).toBe(true)
+    })
+
+    it('should detect change when linked ref points to non-existent file', () => {
+      const input = document.createElement('input')
+      input.type = 'text'
+      input.className = EDD_SELECTORS.UPLOAD_FIELD.replace('.', '')
+      input.value = mockGitHubUrl
+      document.body.appendChild(input)
+
+      const { result } = renderHook(() => useGitHubFiles())
+
+      // Set linked ref to a different file that doesn't exist
+      result.current.linkedGitHubFileRef.current = `${GITHUB_PROTOCOL}nonexistent/repo/v1.0.0/file.zip`
+
+      // Check should detect change and reset ref
+      let changed: boolean
+      act(() => {
+        changed = result.current.checkForGitHubFiles()
+      })
+
+      expect(changed).toBe(true)
+      expect(result.current.linkedGitHubFileRef.current).toBeNull()
+    })
   })
 })
