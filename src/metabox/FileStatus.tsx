@@ -6,9 +6,9 @@ import { GITHUB_PROTOCOL } from '../constants'
 import { ProBadge } from '../components'
 
 export const FileStatus = ({ fileUrl: initialUrl, rootElement }: IFileStatusProps): JSX.Element | null => {
-  const ajaxUrl = window.releaseDeployEDD.ajaxUrl
-  const nonce = window.releaseDeployEDD.contexts.settings?.nonce ||
-    window.releaseDeployEDD.contexts.browser?.nonce ||
+  const ajaxUrl = window.releaseDeployEDD?.ajaxUrl || ''
+  const nonce = window.releaseDeployEDD?.contexts?.settings?.nonce ||
+    window.releaseDeployEDD?.contexts?.browser?.nonce ||
     ''
 
   /** Use file validation hook for testing logic */
@@ -91,7 +91,7 @@ export const FileStatus = ({ fileUrl: initialUrl, rootElement }: IFileStatusProp
               <ProBadge
                 showWrapper={false}
                 renderAsLink={true}
-                href={window.releaseDeployEDD.purchaseUrl}
+                href={window.releaseDeployEDD?.purchaseUrl || '#'}
                 text={getString('common.getPro')}
                 status="default"
               />
@@ -103,7 +103,7 @@ export const FileStatus = ({ fileUrl: initialUrl, rootElement }: IFileStatusProp
               <ProBadge
                 showWrapper={false}
                 renderAsLink={true}
-                href={window.releaseDeployEDD.settingsUrl}
+                href={window.releaseDeployEDD?.settingsUrl || '#'}
                 text={getString('common.fixIt')}
                 status="warning"
               />
