@@ -37,6 +37,7 @@ export interface IMetaboxContext {
         currentVersion: string;
         githubVersion: string;
         lastSync: string;
+        isLinked: boolean;
         nonce: string;
     };
     changelogSync?: {

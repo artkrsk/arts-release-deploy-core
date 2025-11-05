@@ -14,5 +14,7 @@ export interface IVersionSyncProps {
     ajaxUrl: string;
     /** Whether this is a Pro feature */
     isProFeature?: boolean;
+    /** Initial linked state */
+    isLinked?: boolean;
 }
 //# sourceMappingURL=IVersionSync.d.ts.map

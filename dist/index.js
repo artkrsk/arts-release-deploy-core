@@ -435,7 +435,7 @@ function useTokenValidation({
 // src/hooks/useFileValidation.ts
 import { useState as useState3, useEffect as useEffect4, useRef as useRef3 } from "react";
 
-// ../../node_modules/.pnpm/dompurify@3.3.0/node_modules/dompurify/dist/purify.es.mjs
+// node_modules/.pnpm/dompurify@3.3.0/node_modules/dompurify/dist/purify.es.mjs
 var {
   entries,
   setPrototypeOf,
