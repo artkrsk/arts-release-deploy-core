@@ -15,8 +15,8 @@ export interface ISyncControlsProps {
     showInfo: boolean;
     /** Whether buttons should be disabled */
     isDisabled: boolean;
-    /** Whether this is a Pro feature (shows Get Pro badge) */
-    isProFeature?: boolean;
+    /** Whether this feature is available (false shows Get Pro badge) */
+    isFeatureAvailable?: boolean;
     /** Tooltip text for sync button */
     syncTooltip: string;
     /** Tooltip text for link button */

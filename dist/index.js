@@ -1756,7 +1756,6 @@ function injectVersionSyncUI() {
   if (!metaboxData?.versionSync?.enabled) {
     return;
   }
-  const versionSyncData = metaboxData.versionSync;
   setTimeout(() => {
     const versionField = document.querySelector(EDD_SELECTORS.VERSION_FIELD);
     if (!versionField) {
@@ -1767,12 +1766,6 @@ function injectVersionSyncUI() {
     const rootElement = document.createElement("div");
     rootElement.id = `release-deploy-edd-version-sync-${rootSuffix}-root`;
     rootElement.className = "release-deploy-edd-sync-root";
-    rootElement.setAttribute("data-download-id", String(metaboxData.downloadId));
-    rootElement.setAttribute("data-current-version", versionSyncData.currentVersion || "");
-    rootElement.setAttribute("data-github-version", versionSyncData.githubVersion || "");
-    rootElement.setAttribute("data-last-sync", versionSyncData.lastSync || "");
-    rootElement.setAttribute("data-nonce", versionSyncData.nonce);
-    rootElement.setAttribute("data-ajax-url", window.releaseDeployEDD?.ajaxUrl || "");
     const nextNode = versionField.nextSibling;
     if (nextNode && nextNode.nodeType === Node.TEXT_NODE) {
       versionField.parentNode?.insertBefore(rootElement, nextNode.nextSibling);
@@ -1798,11 +1791,6 @@ function injectChangelogSyncUI() {
     const rootElement = document.createElement("div");
     rootElement.id = `release-deploy-edd-changelog-sync-${rootSuffix}-root`;
     rootElement.className = "release-deploy-edd-sync-root";
-    rootElement.setAttribute("data-download-id", String(metaboxData.downloadId));
-    rootElement.setAttribute("data-last-sync", changelogSyncData.lastSync || "");
-    rootElement.setAttribute("data-is-linked", String(changelogSyncData.isLinked));
-    rootElement.setAttribute("data-nonce", changelogSyncData.nonce);
-    rootElement.setAttribute("data-ajax-url", window.releaseDeployEDD?.ajaxUrl || "");
     const changelogLabel = document.querySelector(EDD_SELECTORS.CHANGELOG_LABEL);
     if (changelogLabel) {
       changelogLabel.appendChild(rootElement);
@@ -1922,7 +1910,7 @@ var initVersionSync = () => {
         lastSync: 0,
         nonce,
         ajaxUrl,
-        isProFeature: true
+        isFeatureAvailable: false
       }
     ),
     container
@@ -1969,7 +1957,7 @@ var initChangelogSync = () => {
         downloadId,
         nonce,
         ajaxUrl,
-        isProFeature: true,
+        isFeatureAvailable: false,
         lastSync: 0,
         isLinked: false
       }

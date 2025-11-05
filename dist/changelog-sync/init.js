@@ -16,5 +16,5 @@ export const initChangelogSync = () => {
     if (!downloadId || downloadId <= 0 || !nonce || !ajaxUrl) {
         return;
     }
-    render(React.createElement(ChangelogSync, { downloadId: downloadId, nonce: nonce, ajaxUrl: ajaxUrl, isProFeature: true, lastSync: 0, isLinked: false }), container);
+    render(React.createElement(ChangelogSync, { downloadId: downloadId, nonce: nonce, ajaxUrl: ajaxUrl, isFeatureAvailable: false, lastSync: 0, isLinked: false }), container);
 };

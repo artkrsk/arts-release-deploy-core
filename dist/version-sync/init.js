@@ -16,5 +16,5 @@ export const initVersionSync = () => {
     if (!downloadId || downloadId <= 0 || !nonce || !ajaxUrl) {
         return;
     }
-    render(React.createElement(VersionSync, { downloadId: downloadId, currentVersion: "", githubVersion: "", lastSync: 0, nonce: nonce, ajaxUrl: ajaxUrl, isProFeature: true }), container);
+    render(React.createElement(VersionSync, { downloadId: downloadId, currentVersion: "", githubVersion: "", lastSync: 0, nonce: nonce, ajaxUrl: ajaxUrl, isFeatureAvailable: false }), container);
 };

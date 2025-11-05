@@ -12,8 +12,8 @@ export interface IVersionSyncProps {
     nonce: string;
     /** AJAX URL */
     ajaxUrl: string;
-    /** Whether this is a Pro feature */
-    isProFeature?: boolean;
+    /** Whether this feature is available */
+    isFeatureAvailable?: boolean;
     /** Initial linked state */
     isLinked?: boolean;
 }

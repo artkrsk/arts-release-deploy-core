@@ -6,12 +6,10 @@ export interface IChangelogSyncProps {
   nonce: string
   /** AJAX URL */
   ajaxUrl: string
-  /** Whether this is a Pro feature */
-  isProFeature?: boolean
+  /** Whether this feature is available */
+  isFeatureAvailable?: boolean
   /** Last sync timestamp */
   lastSync?: number
-  /** Whether changelog is linked (for stub/display) */
+  /** Initial linked state */
   isLinked?: boolean
-  /** Initial linked state (for full Pro implementation) */
-  initialIsLinked?: boolean
 }

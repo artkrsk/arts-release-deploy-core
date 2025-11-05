@@ -29,7 +29,7 @@ export const initVersionSync = () => {
       lastSync={0}
       nonce={nonce}
       ajaxUrl={ajaxUrl}
-      isProFeature={true}
+      isFeatureAvailable={false}
     />,
     container
   )

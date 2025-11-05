@@ -26,7 +26,7 @@ export const initChangelogSync = () => {
       downloadId={downloadId}
       nonce={nonce}
       ajaxUrl={ajaxUrl}
-      isProFeature={true}
+      isFeatureAvailable={false}
       lastSync={0}
       isLinked={false}
     />,
