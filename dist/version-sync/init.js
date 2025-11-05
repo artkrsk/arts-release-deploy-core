@@ -13,8 +13,8 @@ export const initVersionSync = () => {
     const downloadId = parseInt(container.dataset['downloadId'] || '0');
     const nonce = container.dataset['nonce'] || '';
     const ajaxUrl = container.dataset['ajaxUrl'] || window.ajaxurl;
-    if (!downloadId || downloadId <= 0 || !nonce || !ajaxUrl) {
-        return;
-    }
+    // if (!downloadId || downloadId <= 0 || !nonce || !ajaxUrl) {
+    //   return
+    // }
     render(React.createElement(VersionSync, { downloadId: downloadId, currentVersion: "", githubVersion: "", lastSync: 0, nonce: nonce, ajaxUrl: ajaxUrl, isFeatureAvailable: false }), container);
 };

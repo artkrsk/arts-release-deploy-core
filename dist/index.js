@@ -1897,9 +1897,6 @@ var initVersionSync = () => {
   const downloadId = parseInt(container.dataset["downloadId"] || "0");
   const nonce = container.dataset["nonce"] || "";
   const ajaxUrl = container.dataset["ajaxUrl"] || window.ajaxurl;
-  if (!downloadId || downloadId <= 0 || !nonce || !ajaxUrl) {
-    return;
-  }
   render(
     /* @__PURE__ */ React6.createElement(
       VersionSync,
@@ -1947,9 +1944,6 @@ var initChangelogSync = () => {
   const downloadId = parseInt(container.dataset["downloadId"] || "0");
   const nonce = container.dataset["nonce"] || "";
   const ajaxUrl = container.dataset["ajaxUrl"] || window.ajaxurl;
-  if (!downloadId || downloadId <= 0 || !nonce || !ajaxUrl) {
-    return;
-  }
   render2(
     /* @__PURE__ */ React8.createElement(
       ChangelogSync,

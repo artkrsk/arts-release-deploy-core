@@ -13,8 +13,8 @@ export const initChangelogSync = () => {
     const downloadId = parseInt(container.dataset['downloadId'] || '0');
     const nonce = container.dataset['nonce'] || '';
     const ajaxUrl = container.dataset['ajaxUrl'] || window.ajaxurl;
-    if (!downloadId || downloadId <= 0 || !nonce || !ajaxUrl) {
-        return;
-    }
+    // if (!downloadId || downloadId <= 0 || !nonce || !ajaxUrl) {
+    //   return
+    // }
     render(React.createElement(ChangelogSync, { downloadId: downloadId, nonce: nonce, ajaxUrl: ajaxUrl, isFeatureAvailable: false, lastSync: 0, isLinked: false }), container);
 };

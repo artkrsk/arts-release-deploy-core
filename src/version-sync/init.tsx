@@ -17,9 +17,9 @@ export const initVersionSync = () => {
   const nonce = container.dataset['nonce'] || ''
   const ajaxUrl = container.dataset['ajaxUrl'] || (window as any).ajaxurl
 
-  if (!downloadId || downloadId <= 0 || !nonce || !ajaxUrl) {
-    return
-  }
+  // if (!downloadId || downloadId <= 0 || !nonce || !ajaxUrl) {
+  //   return
+  // }
 
   render(
     <VersionSync
