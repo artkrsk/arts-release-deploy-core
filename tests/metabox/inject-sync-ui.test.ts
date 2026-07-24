@@ -166,19 +166,19 @@ describe('inject-sync-ui', () => {
       expect(mockCreateElement).toHaveBeenCalledWith('div')
     })
 
-    it('should set data-ajax-url attribute on version sync root element (line 42 coverage)', () => {
+    it('should create root element without data attributes', () => {
       window.releaseDeployEDD.features.versionSync = true
 
       const { injectVersionSyncUI } = injectSyncUI
 
       injectVersionSyncUI()
 
-      // Verify createElement was called and would set the data-ajax-url attribute
+      // Verify createElement was called
       expect(mockCreateElement).toHaveBeenCalledWith('div')
 
-      // The created element should have data-ajax-url set to the configured AJAX URL
+      // The created element should not have data attributes set (they were removed)
       const mockElement = mockCreateElement.mock.results[0].value
-      expect(mockElement.setAttribute).toHaveBeenCalledWith('data-ajax-url', 'https://example.com/wp-admin/admin-ajax.php')
+      expect(mockElement.setAttribute).not.toHaveBeenCalledWith('data-ajax-url', expect.any(String))
     })
 
     it('should trigger initialization event', () => {
@@ -291,19 +291,19 @@ describe('inject-sync-ui', () => {
       expect(mockCreateElement).toHaveBeenCalledWith('div')
     })
 
-    it('should set data-ajax-url attribute on changelog sync root element (line 90 coverage)', () => {
+    it('should create root element without data attributes', () => {
       window.releaseDeployEDD.features.changelogSync = true
 
       const { injectChangelogSyncUI } = injectSyncUI
 
       injectChangelogSyncUI()
 
-      // Verify createElement was called and would set the data-ajax-url attribute
+      // Verify createElement was called
       expect(mockCreateElement).toHaveBeenCalledWith('div')
 
-      // The created element should have data-ajax-url set to the configured AJAX URL
+      // The created element should not have data attributes set (they were removed)
       const mockElement = mockCreateElement.mock.results[0].value
-      expect(mockElement.setAttribute).toHaveBeenCalledWith('data-ajax-url', 'https://example.com/wp-admin/admin-ajax.php')
+      expect(mockElement.setAttribute).not.toHaveBeenCalledWith('data-ajax-url', expect.any(String))
     })
 
     it('should trigger initialization event', () => {

@@ -42,7 +42,7 @@ describe('changelog-sync/init', () => {
     expect(mockRender).not.toHaveBeenCalled()
   })
 
-  it('should return early if downloadId is missing or invalid', () => {
+  it('should render even if downloadId is missing or invalid', () => {
     const container = document.createElement('div')
     container.id = 'release-deploy-edd-changelog-sync-free-root'
     container.dataset.nonce = 'test-nonce'
@@ -51,19 +51,19 @@ describe('changelog-sync/init', () => {
 
     // Test missing downloadId
     initChangelogSync()
-    expect(mockRender).not.toHaveBeenCalled()
+    expect(mockRender).toHaveBeenCalled()
 
     // Test invalid downloadId
     container.dataset.downloadId = '0'
     initChangelogSync()
-    expect(mockRender).not.toHaveBeenCalled()
+    expect(mockRender).toHaveBeenCalled()
 
     container.dataset.downloadId = '-1'
     initChangelogSync()
-    expect(mockRender).not.toHaveBeenCalled()
+    expect(mockRender).toHaveBeenCalled()
   })
 
-  it('should return early if nonce is missing', () => {
+  it('should render even if nonce is missing', () => {
     const container = document.createElement('div')
     container.id = 'release-deploy-edd-changelog-sync-free-root'
     container.dataset.downloadId = '123'
@@ -72,10 +72,10 @@ describe('changelog-sync/init', () => {
 
     initChangelogSync()
 
-    expect(mockRender).not.toHaveBeenCalled()
+    expect(mockRender).toHaveBeenCalled()
   })
 
-  it('should return early if ajaxUrl is missing', () => {
+  it('should render even if ajaxUrl is missing', () => {
     const container = document.createElement('div')
     container.id = 'release-deploy-edd-changelog-sync-free-root'
     container.dataset.downloadId = '123'
@@ -87,7 +87,7 @@ describe('changelog-sync/init', () => {
 
     initChangelogSync()
 
-    expect(mockRender).not.toHaveBeenCalled()
+    expect(mockRender).toHaveBeenCalled()
   })
 
   it('should render ChangelogSync component when all required data is present', () => {
@@ -109,7 +109,7 @@ describe('changelog-sync/init', () => {
       downloadId: 123,
       nonce: 'test-nonce',
       ajaxUrl: 'https://example.com/ajax',
-      isProFeature: true,
+      isFeatureAvailable: false,
       lastSync: 0,
       isLinked: false
     })

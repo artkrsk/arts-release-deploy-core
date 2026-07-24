@@ -86,7 +86,6 @@ export const TokenField = ({ initialValue, onChange }: ITokenFieldProps): JSX.El
           value={isConstantDefined ? '' : value}
           onChange={handleChange}
           onBlur={handleBlur}
-          maxLength={255}
           placeholder={
             isConstantDefined
               ? getString('token.managedViaConstant')

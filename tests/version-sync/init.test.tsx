@@ -42,7 +42,7 @@ describe('version-sync/init', () => {
     expect(mockRender).not.toHaveBeenCalled()
   })
 
-  it('should return early if downloadId is missing or invalid', () => {
+  it('should render even if downloadId is missing or invalid', () => {
     const container = document.createElement('div')
     container.id = 'release-deploy-edd-version-sync-free-root'
     container.dataset.nonce = 'test-nonce'
@@ -51,19 +51,19 @@ describe('version-sync/init', () => {
 
     // Test missing downloadId
     initVersionSync()
-    expect(mockRender).not.toHaveBeenCalled()
+    expect(mockRender).toHaveBeenCalled()
 
     // Test invalid downloadId
     container.dataset.downloadId = '0'
     initVersionSync()
-    expect(mockRender).not.toHaveBeenCalled()
+    expect(mockRender).toHaveBeenCalled()
 
     container.dataset.downloadId = '-1'
     initVersionSync()
-    expect(mockRender).not.toHaveBeenCalled()
+    expect(mockRender).toHaveBeenCalled()
   })
 
-  it('should return early if nonce is missing', () => {
+  it('should render even if nonce is missing', () => {
     const container = document.createElement('div')
     container.id = 'release-deploy-edd-version-sync-free-root'
     container.dataset.downloadId = '123'
@@ -72,10 +72,10 @@ describe('version-sync/init', () => {
 
     initVersionSync()
 
-    expect(mockRender).not.toHaveBeenCalled()
+    expect(mockRender).toHaveBeenCalled()
   })
 
-  it('should return early if ajaxUrl is missing', () => {
+  it('should render even if ajaxUrl is missing', () => {
     const container = document.createElement('div')
     container.id = 'release-deploy-edd-version-sync-free-root'
     container.dataset.downloadId = '123'
@@ -87,7 +87,7 @@ describe('version-sync/init', () => {
 
     initVersionSync()
 
-    expect(mockRender).not.toHaveBeenCalled()
+    expect(mockRender).toHaveBeenCalled()
   })
 
   it('should render VersionSync component when all required data is present', () => {
@@ -112,7 +112,7 @@ describe('version-sync/init', () => {
       lastSync: 0,
       nonce: 'test-nonce',
       ajaxUrl: 'https://example.com/ajax',
-      isProFeature: true
+      isFeatureAvailable: false
     })
     expect(containerArg).toBe(container)
   })
@@ -151,7 +151,7 @@ describe('version-sync/init', () => {
     expect(element.props.currentVersion).toBe('')
     expect(element.props.githubVersion).toBe('')
     expect(element.props.lastSync).toBe(0)
-    expect(element.props.isProFeature).toBe(true)
+    expect(element.props.isFeatureAvailable).toBe(false)
     expect(containerArg).toBe(container)
   })
 })

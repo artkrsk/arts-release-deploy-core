@@ -1710,7 +1710,6 @@ var TokenField = ({ initialValue, onChange }) => {
       value: isConstantDefined ? "" : value,
       onChange: handleChange,
       onBlur: handleBlur,
-      maxLength: 255,
       placeholder: isConstantDefined ? getString("token.managedViaConstant") : "github_pat...",
       disabled: status === "checking" || isConstantDefined,
       help: isConstantDefined ? getString("token.constantHelp") : getString("token.enterHelp"),

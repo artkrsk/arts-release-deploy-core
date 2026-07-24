@@ -63,7 +63,7 @@ export const TokenField = ({ initialValue, onChange }) => {
     const statusContent = getStatusContent();
     return (React.createElement("div", null,
         React.createElement("div", { className: "release-deploy-edd-token-field" },
-            React.createElement(TextControl, { type: showPassword ? 'text' : 'password', value: isConstantDefined ? '' : value, onChange: handleChange, onBlur: handleBlur, maxLength: 255, placeholder: isConstantDefined
+            React.createElement(TextControl, { type: showPassword ? 'text' : 'password', value: isConstantDefined ? '' : value, onChange: handleChange, onBlur: handleBlur, placeholder: isConstantDefined
                     ? getString('token.managedViaConstant')
                     : 'github_pat...', disabled: status === 'checking' || isConstantDefined, help: isConstantDefined
                     ? getString('token.constantHelp')
