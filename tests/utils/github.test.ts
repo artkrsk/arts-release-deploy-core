@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { parseGitHubUrl, buildGitHubUrl } from '../../src/utils/github'
+import { describe, expect, it } from 'vitest'
+import { buildGitHubUrl, parseGitHubUrl } from '../../src/utils/github'
 
 describe('parseGitHubUrl', () => {
   it('parses valid GitHub URL correctly', () => {

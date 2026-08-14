@@ -1,3 +1,3 @@
-export * from './inject-sync-ui';
 export * from './FileStatus';
+export * from './inject-sync-ui';
 //# sourceMappingURL=index.d.ts.map

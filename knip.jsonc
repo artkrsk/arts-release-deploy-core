@@ -1,0 +1,8 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["tests/**/*.test.{ts,tsx}"],
+  "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
+  "ignoreExportsUsedInFile": true,
+  // Referenced only as typeof-imports in global.d.ts to type the wp host global.
+  "ignoreDependencies": ["@wordpress/components"]
+}

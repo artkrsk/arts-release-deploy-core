@@ -1,5 +1,5 @@
-import type { IStringKeys } from '../interfaces/IStringKeys'
 import { TRANSLATION_FALLBACKS } from '../constants/TRANSLATION_FALLBACKS'
+import type { IStringKeys } from '../interfaces/IStringKeys'
 
 /**
  * Get translated string by key from backend configuration

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { EDD_SELECTORS } from '@/constants'
 import * as injectSyncUI from '@/metabox/inject-sync-ui'
 
@@ -55,7 +55,7 @@ const mockSetTimeout = vi.fn((callback, delay) => {
 vi.stubGlobal('setTimeout', mockSetTimeout)
 
 // Mock document.querySelector and document.createElement
-const mockCreateElement = vi.fn((tagName) => {
+const mockCreateElement = vi.fn((_tagName) => {
   const element = {
     id: '',
     className: '',
@@ -79,10 +79,12 @@ const mockCreateElement = vi.fn((tagName) => {
 const createMockElement = (hasParent = true, hasNextSibling = true) => {
   const element = {
     id: 'mock-field',
-    parentNode: hasParent ? {
-      insertBefore: vi.fn(),
-      appendChild: vi.fn()
-    } : null,
+    parentNode: hasParent
+      ? {
+          insertBefore: vi.fn(),
+          appendChild: vi.fn()
+        }
+      : null,
     nextSibling: hasNextSibling ? { nodeType: 3 } : null,
     addEventListener: vi.fn(),
     removeEventListener: vi.fn()
@@ -213,10 +215,7 @@ describe('inject-sync-ui', () => {
 
       injectVersionSyncUI()
 
-      expect(mockSetTimeout).toHaveBeenCalledWith(
-        expect.any(Function),
-        100
-      )
+      expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 100)
     })
 
     it('should not throw with malformed data attributes', () => {
@@ -338,10 +337,7 @@ describe('inject-sync-ui', () => {
 
       injectChangelogSyncUI()
 
-      expect(mockSetTimeout).toHaveBeenCalledWith(
-        expect.any(Function),
-        100
-      )
+      expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 100)
     })
 
     it('should handle malformed data attributes gracefully', () => {

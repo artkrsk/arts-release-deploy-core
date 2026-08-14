@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
 import DOMPurify from 'dompurify'
+import { useEffect, useRef, useState } from 'react'
 import type { IUseFileValidationConfig, IUseFileValidationReturn } from '../interfaces'
-import type { TStatusState } from '../types'
 import { GitHubService } from '../services'
+import type { TStatusState } from '../types'
 import { getString } from '../utils'
 
 /**
@@ -16,7 +16,6 @@ export function useFileValidation({
   fileUrl,
   ajaxUrl,
   nonce,
-  enabled = true,
   gitHubService = GitHubService
 }: IUseFileValidationConfig): IUseFileValidationReturn {
   const [status, setStatus] = useState<TStatusState>('idle')
@@ -46,12 +45,7 @@ export function useFileValidation({
     }
 
     try {
-      const testResult = await gitHubService.testFile(
-        ajaxUrl,
-        nonce,
-        url,
-        abortController.signal
-      )
+      const testResult = await gitHubService.testFile(ajaxUrl, nonce, url, abortController.signal)
 
       // Check if this test was aborted
       if (abortController.signal.aborted) {

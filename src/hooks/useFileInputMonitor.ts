@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { EDD_SELECTORS, GITHUB_PROTOCOL, INTERVALS } from '../constants'
 import type { IUseFileInputMonitorConfig, IUseFileInputMonitorReturn } from '../interfaces'
-import { GITHUB_PROTOCOL, INTERVALS, EDD_SELECTORS } from '../constants'
 
 /**
  * Custom hook for monitoring EDD file input changes
@@ -52,7 +52,7 @@ export function useFileInputMonitor({
       // Update URL immediately
       setCurrentUrl(newValue)
 
-      if (newValue && newValue.startsWith(GITHUB_PROTOCOL)) {
+      if (newValue?.startsWith(GITHUB_PROTOCOL)) {
         // Debounce the callback for GitHub URLs
         debounceTimer = window.setTimeout(() => {
           if (isMountedRef.current) {

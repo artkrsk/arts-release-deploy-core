@@ -1,6 +1,6 @@
-import type { IRateLimit } from './';
-import type { TValidationStatus } from '../types';
 import type { GitHubService } from '../services';
+import type { TValidationStatus } from '../types';
+import type { IRateLimit } from './';
 /** Configuration for token validation hook */
 export interface IUseTokenValidationConfig {
     /** Initial token value */

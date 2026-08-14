@@ -14,5 +14,3 @@ declare global {
     releaseDeployEDD: IConfig
   }
 }
-
-export {}

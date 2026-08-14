@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { handleError, getErrorMessage, getContextLabel } from '../../src/utils/errorHandler'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ErrorContext } from '../../src/types'
+import { getContextLabel, getErrorMessage, handleError } from '../../src/utils/errorHandler'
 
 describe('errorHandler', () => {
   describe('getErrorMessage', () => {

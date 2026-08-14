@@ -1,0 +1,40 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.4/schema.json",
+  "extends": ["@arts/wp-plugin-tooling/biome"],
+  "files": {
+    "includes": ["src/**", "tests/**", "build.js", "vitest.config.ts", "biome.json", "knip.jsonc"]
+  },
+  "javascript": {
+    "jsxRuntime": "reactClassic"
+  },
+  "overrides": [
+    {
+      "includes": ["src/**", "tests/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/metabox/FileStatus.tsx", "src/settings/TokenField.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noStaticElementInteractions": "off",
+            "useKeyWithClickEvents": "off"
+          }
+        }
+      }
+    }
+  ],
+  "linter": {
+    "rules": {
+      "correctness": {
+        "useExhaustiveDependencies": "off"
+      }
+    }
+  }
+}

@@ -13,9 +13,9 @@ export const initChangelogSync = () => {
     return
   }
 
-  const downloadId = parseInt(container.dataset['downloadId'] || '0')
-  const nonce = container.dataset['nonce'] || ''
-  const ajaxUrl = container.dataset['ajaxUrl'] || (window as any).ajaxurl
+  const downloadId = parseInt(container.dataset.downloadId || '0', 10)
+  const nonce = container.dataset.nonce || ''
+  const ajaxUrl = container.dataset.ajaxUrl || (window as any).ajaxurl
 
   // if (!downloadId || downloadId <= 0 || !nonce || !ajaxUrl) {
   //   return

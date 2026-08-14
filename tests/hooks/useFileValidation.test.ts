@@ -1,7 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useFileValidation } from '../../src/hooks/useFileValidation'
-import type { IUseFileValidationConfig } from '../../src/interfaces'
 
 describe('useFileValidation', () => {
   const mockAjaxUrl = 'https://example.com/wp-admin/admin-ajax.php'
@@ -119,13 +118,13 @@ describe('useFileValidation', () => {
       expect(result.current.errorCode).toBe('HTML_ERROR')
     })
 
-    
     it('should not update state when component is unmounted', async () => {
-      let resolveTest: (value: any) => void
-      mockGitHubService.testFile.mockImplementation(() =>
-        new Promise(resolve => {
-          resolveTest = resolve
-        })
+      let _resolveTest: (value: any) => void
+      mockGitHubService.testFile.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            _resolveTest = resolve
+          })
       )
 
       const { result, unmount } = renderHook(() =>
@@ -428,10 +427,11 @@ describe('useFileValidation', () => {
 
     it('should set status to testing during validation', async () => {
       let resolveTest: (value: any) => void
-      mockGitHubService.testFile.mockImplementation(() =>
-        new Promise(resolve => {
-          resolveTest = resolve
-        })
+      mockGitHubService.testFile.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveTest = resolve
+          })
       )
 
       const { result } = renderHook(() =>
@@ -456,7 +456,7 @@ describe('useFileValidation', () => {
 
       // Resolve the promise
       await act(async () => {
-        resolveTest!(mockFileResult)
+        resolveTest?.(mockFileResult)
       })
 
       // Check final state
@@ -468,21 +468,25 @@ describe('useFileValidation', () => {
 
   describe('abort handling', () => {
     it('should abort previous test when starting a new one', async () => {
-      let firstResolve: (value: any) => void
+      let _firstResolve: (value: any) => void
       let firstSignal: AbortSignal | undefined
       let secondSignal: AbortSignal | undefined
 
       mockGitHubService.testFile
-        .mockImplementationOnce((_url: string, _nonce: string, _file: string, signal?: AbortSignal) => {
-          firstSignal = signal
-          return new Promise(resolve => {
-            firstResolve = resolve
-          })
-        })
-        .mockImplementationOnce((_url: string, _nonce: string, _file: string, signal?: AbortSignal) => {
-          secondSignal = signal
-          return Promise.resolve(mockFileResult)
-        })
+        .mockImplementationOnce(
+          (_url: string, _nonce: string, _file: string, signal?: AbortSignal) => {
+            firstSignal = signal
+            return new Promise((resolve) => {
+              _firstResolve = resolve
+            })
+          }
+        )
+        .mockImplementationOnce(
+          (_url: string, _nonce: string, _file: string, signal?: AbortSignal) => {
+            secondSignal = signal
+            return Promise.resolve(mockFileResult)
+          }
+        )
 
       const { result } = renderHook(() =>
         useFileValidation({
@@ -544,10 +548,12 @@ describe('useFileValidation', () => {
     it('should cleanup abort controller on unmount', () => {
       let signal: AbortSignal | undefined
 
-      mockGitHubService.testFile.mockImplementation((_url: string, _nonce: string, _file: string, s?: AbortSignal) => {
-        signal = s
-        return new Promise(() => {}) // Never resolves
-      })
+      mockGitHubService.testFile.mockImplementation(
+        (_url: string, _nonce: string, _file: string, s?: AbortSignal) => {
+          signal = s
+          return new Promise(() => {}) // Never resolves
+        }
+      )
 
       const { result, unmount } = renderHook(() =>
         useFileValidation({
@@ -633,10 +639,11 @@ describe('useFileValidation', () => {
   describe('mounting behavior', () => {
     it('should not update state after unmount', async () => {
       let resolveTest: (value: any) => void
-      mockGitHubService.testFile.mockImplementation(() =>
-        new Promise(resolve => {
-          resolveTest = resolve
-        })
+      mockGitHubService.testFile.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveTest = resolve
+          })
       )
 
       const { result, unmount } = renderHook(() =>
@@ -659,7 +666,7 @@ describe('useFileValidation', () => {
 
       // Resolve after unmount (should not throw or update state)
       await act(async () => {
-        resolveTest!(mockFileResult)
+        resolveTest?.(mockFileResult)
       })
 
       // No way to check the state after unmount, but test should not throw

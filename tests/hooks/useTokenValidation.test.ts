@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useTokenValidation } from '@/hooks/useTokenValidation'
-import type { IUseTokenValidationConfig, IRateLimit } from '@/interfaces'
+import type { IRateLimit } from '@/interfaces'
 
 describe('useTokenValidation', () => {
   const mockAjaxUrl = 'https://example.com/wp-admin/admin-ajax.php'
@@ -86,11 +86,7 @@ describe('useTokenValidation', () => {
       )
 
       await waitFor(() => {
-        expect(mockGitHubService.testConnection).toHaveBeenCalledWith(
-          mockAjaxUrl,
-          mockNonce,
-          ''
-        )
+        expect(mockGitHubService.testConnection).toHaveBeenCalledWith(mockAjaxUrl, mockNonce, '')
       })
 
       await waitFor(() => {
@@ -125,10 +121,7 @@ describe('useTokenValidation', () => {
         mockNonce,
         mockToken
       )
-      expect(mockGitHubService.getRateLimit).toHaveBeenCalledWith(
-        mockAjaxUrl,
-        mockNonce
-      )
+      expect(mockGitHubService.getRateLimit).toHaveBeenCalledWith(mockAjaxUrl, mockNonce)
     })
 
     it('should handle invalid token', async () => {
@@ -217,19 +210,16 @@ describe('useTokenValidation', () => {
       })
 
       expect(result.current.status).toBe('valid')
-      expect(mockGitHubService.testConnection).toHaveBeenCalledWith(
-        mockAjaxUrl,
-        mockNonce,
-        ''
-      )
+      expect(mockGitHubService.testConnection).toHaveBeenCalledWith(mockAjaxUrl, mockNonce, '')
     })
 
     it('should set status to checking during validation', async () => {
       let resolveConnection: (value: boolean) => void
-      mockGitHubService.testConnection.mockImplementation(() =>
-        new Promise(resolve => {
-          resolveConnection = resolve
-        })
+      mockGitHubService.testConnection.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveConnection = resolve
+          })
       )
       mockGitHubService.getRateLimit.mockResolvedValue(mockRateLimit)
 
@@ -253,7 +243,7 @@ describe('useTokenValidation', () => {
 
       // Resolve the promise
       await act(async () => {
-        resolveConnection!(true)
+        resolveConnection?.(true)
       })
 
       // Wait for state to update
@@ -303,10 +293,11 @@ describe('useTokenValidation', () => {
 
     it('should not refresh when already checking', async () => {
       let resolveConnection: (value: boolean) => void
-      mockGitHubService.testConnection.mockImplementation(() =>
-        new Promise(resolve => {
-          resolveConnection = resolve
-        })
+      mockGitHubService.testConnection.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveConnection = resolve
+          })
       )
 
       const { result } = renderHook(() =>
@@ -334,7 +325,7 @@ describe('useTokenValidation', () => {
 
       // Clean up by resolving
       await act(async () => {
-        resolveConnection!(true)
+        resolveConnection?.(true)
       })
     })
 
@@ -364,10 +355,11 @@ describe('useTokenValidation', () => {
 
       let resolveRateLimit: (value: any) => void
       mockGitHubService.testConnection.mockResolvedValue(true)
-      mockGitHubService.getRateLimit.mockImplementation(() =>
-        new Promise(resolve => {
-          resolveRateLimit = resolve
-        })
+      mockGitHubService.getRateLimit.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveRateLimit = resolve
+          })
       )
 
       // Start a refresh
@@ -388,7 +380,7 @@ describe('useTokenValidation', () => {
 
       // Resolve the promise
       await act(async () => {
-        resolveRateLimit!(mockRateLimit)
+        resolveRateLimit?.(mockRateLimit)
       })
     })
 

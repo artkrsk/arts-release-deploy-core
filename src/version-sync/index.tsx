@@ -1,2 +1,2 @@
-export * from './VersionSync'
 export * from './init'
+export * from './VersionSync'

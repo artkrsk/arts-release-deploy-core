@@ -1,3 +1,51 @@
+// src/changelog-sync/ChangelogSync.tsx
+import React2 from "react";
+
+// src/components/ProBadge.tsx
+import React from "react";
+
+// src/utils/errorHandler.ts
+function handleError(error, context, options = {}) {
+  const { notify = false, details = null, critical = false } = options;
+  const errorMessage = getErrorMessage(error);
+  const consoleMessage = `[EDD Release Deploy - ${context}] ${errorMessage}`;
+  if (critical) {
+    console.error(consoleMessage, details || "");
+  }
+  if (notify) {
+    console.warn(`[${context}] ${errorMessage}`);
+  }
+  return {
+    message: errorMessage,
+    context,
+    details
+  };
+}
+function getErrorMessage(error) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  if (error && typeof error === "object" && "message" in error) {
+    return String(error.message);
+  }
+  return "An unknown error occurred";
+}
+function getContextLabel(context) {
+  const labels = {
+    "version-sync": "Version Sync",
+    "changelog-sync": "Changelog Sync",
+    webhook: "Webhook",
+    browser: "File Browser",
+    "file-status": "File Status",
+    settings: "Settings",
+    general: "Release Deploy"
+  };
+  return labels[context] || "Error";
+}
+
 // src/constants/api.ts
 var API_ACTIONS = {
   GET_REPOS: "edd_release_deploy_get_repos",
@@ -7,14 +55,6 @@ var API_ACTIONS = {
   CLEAR_CACHE: "edd_release_deploy_clear_cache",
   GET_RATE_LIMIT: "edd_release_deploy_get_rate_limit"
 };
-
-// src/constants/ui.ts
-var INTERVALS = {
-  POLL: 600,
-  DEBOUNCE: 600
-};
-var SIZE_UNITS = ["B", "KB", "MB", "GB"];
-var GITHUB_PROTOCOL = "edd-release-deploy://";
 
 // src/constants/dom.ts
 var EDD_SELECTORS = {
@@ -70,6 +110,14 @@ var TRANSLATION_FALLBACKS = {
   "sync.autoChangelogSync": "Auto Changelog Sync"
 };
 
+// src/constants/ui.ts
+var INTERVALS = {
+  POLL: 600,
+  DEBOUNCE: 600
+};
+var SIZE_UNITS = ["B", "KB", "MB", "GB"];
+var GITHUB_PROTOCOL = "edd-release-deploy://";
+
 // src/utils/format.ts
 function formatSize(bytes) {
   let size = bytes;
@@ -81,9 +129,17 @@ function formatSize(bytes) {
   return `${size.toFixed(1)} ${SIZE_UNITS[unitIndex]}`;
 }
 
+// src/utils/getString.ts
+var getString = (key) => {
+  if (window.releaseDeployEDD?.strings?.[key]) {
+    return window.releaseDeployEDD.strings[key];
+  }
+  return TRANSLATION_FALLBACKS[key] || key;
+};
+
 // src/utils/github.ts
 function parseGitHubUrl(url) {
-  if (!url || !url.startsWith(GITHUB_PROTOCOL)) {
+  if (!url?.startsWith(GITHUB_PROTOCOL)) {
     return null;
   }
   const clean = url.replace(GITHUB_PROTOCOL, "");
@@ -102,338 +158,141 @@ function buildGitHubUrl(repo, release, filename) {
   return `${GITHUB_PROTOCOL}${repo}/${release}/${filename}`;
 }
 
-// src/utils/errorHandler.ts
-function handleError(error, context, options = {}) {
-  const { notify = false, details = null, critical = false } = options;
-  const errorMessage = getErrorMessage(error);
-  const consoleMessage = `[EDD Release Deploy - ${context}] ${errorMessage}`;
-  if (critical) {
-    console.error(consoleMessage, details || "");
+// src/components/ProBadge.tsx
+var ProBadge = ({
+  label,
+  icon,
+  showWrapper = true,
+  renderAsLink = true,
+  href,
+  text: text2,
+  status = "default",
+  openInNewWindow = true
+}) => {
+  const badgeText = text2 || getString("common.getPro");
+  const statusClass = status !== "default" ? ` arts-license-pro-badge_${status}` : "";
+  const badgeClassName = `arts-license-pro-badge${statusClass}`;
+  const shouldRenderAsLink = renderAsLink && href;
+  const badge = shouldRenderAsLink ? /* @__PURE__ */ React.createElement(
+    "a",
+    {
+      href,
+      className: badgeClassName,
+      "aria-label": `${badgeText} - Pro feature`,
+      ...openInNewWindow && { target: "_blank", rel: "noopener noreferrer" }
+    },
+    badgeText
+  ) : /* @__PURE__ */ React.createElement("span", { className: badgeClassName, role: "status", "aria-label": `${badgeText} - Pro feature` }, badgeText);
+  if (!showWrapper) {
+    return badge;
   }
-  if (notify) {
-    console.warn(`[${context}] ${errorMessage}`);
-  }
-  return {
-    message: errorMessage,
-    context,
-    details
-  };
-}
-function getErrorMessage(error) {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  if (typeof error === "string") {
-    return error;
-  }
-  if (error && typeof error === "object" && "message" in error) {
-    return String(error.message);
-  }
-  return "An unknown error occurred";
-}
-function getContextLabel(context) {
-  const labels = {
-    "version-sync": "Version Sync",
-    "changelog-sync": "Changelog Sync",
-    webhook: "Webhook",
-    browser: "File Browser",
-    "file-status": "File Status",
-    settings: "Settings",
-    general: "Release Deploy"
-  };
-  return labels[context] || "Error";
-}
-
-// src/utils/getString.ts
-var getString = (key) => {
-  if (window.releaseDeployEDD?.strings?.[key]) {
-    return window.releaseDeployEDD.strings[key];
-  }
-  return TRANSLATION_FALLBACKS[key] || key;
+  return /* @__PURE__ */ React.createElement("span", { className: "arts-license-pro-badge-wrapper" }, icon && /* @__PURE__ */ React.createElement("span", { className: `dashicons ${icon}`, role: "img", "aria-hidden": "true" }), label && /* @__PURE__ */ React.createElement("span", { className: "arts-license-pro-badge-wrapper__label" }, label), badge);
 };
 
-// src/hooks/usePolling.ts
-import { useEffect, useRef } from "react";
-function usePolling(callback, interval, enabled = true) {
-  const intervalRef = useRef(null);
-  const callbackRef = useRef(callback);
-  useEffect(() => {
-    callbackRef.current = callback;
-  }, [callback]);
-  useEffect(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+// src/changelog-sync/ChangelogSync.tsx
+var ChangelogSync = (_props) => {
+  const purchaseUrl = window.releaseDeployEDD?.purchaseUrl || "";
+  return /* @__PURE__ */ React2.createElement(
+    ProBadge,
+    {
+      label: getString("sync.autoChangelogSync"),
+      icon: "dashicons-media-document",
+      text: getString("common.getPro"),
+      showWrapper: true,
+      renderAsLink: true,
+      href: purchaseUrl,
+      status: "default",
+      openInNewWindow: true
     }
-    if (enabled && interval > 0) {
-      intervalRef.current = setInterval(() => {
-        callbackRef.current();
-      }, interval);
-    }
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [interval, enabled]);
-  const stopPolling = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  };
-  const trigger = () => {
-    callbackRef.current();
-  };
-  return {
-    stopPolling,
-    trigger
-  };
-}
-function useTimeouts() {
-  const timeoutsRef = useRef(/* @__PURE__ */ new Set());
-  const setTrackedTimeout = (callback, delay) => {
-    const timeoutId = setTimeout(() => {
-      callback();
-      timeoutsRef.current.delete(timeoutId);
-    }, delay);
-    timeoutsRef.current.add(timeoutId);
-    return timeoutId;
-  };
-  const clearTrackedTimeout = (timeoutId) => {
-    clearTimeout(timeoutId);
-    timeoutsRef.current.delete(timeoutId);
-  };
-  const clearAllTimeouts = () => {
-    timeoutsRef.current.forEach(clearTimeout);
-    timeoutsRef.current.clear();
-  };
-  useEffect(() => {
-    return () => {
-      clearAllTimeouts();
-    };
-  }, []);
-  return {
-    setTrackedTimeout,
-    clearTrackedTimeout,
-    clearAllTimeouts
-  };
-}
+  );
+};
 
-// src/hooks/useGitHubFiles.ts
-import { useState, useEffect as useEffect2, useRef as useRef2 } from "react";
-function useGitHubFiles() {
-  const [hasGitHubFiles, setHasGitHubFiles] = useState(false);
-  const linkedGitHubFileRef = useRef2(null);
-  const isMountedRef = useRef2(true);
-  const getFirstGitHubFile = () => {
-    const fileInputs = document.querySelectorAll(EDD_SELECTORS.UPLOAD_FIELD);
-    for (let i = 0; i < fileInputs.length; i++) {
-      const input = fileInputs[i];
-      if (input.value && input.value.startsWith(GITHUB_PROTOCOL)) {
-        return input.value;
+// src/changelog-sync/init.tsx
+import React3 from "react";
+var { render } = wp.element;
+var initChangelogSync = () => {
+  const container = document.getElementById("release-deploy-edd-changelog-sync-free-root");
+  if (!container) {
+    return;
+  }
+  const downloadId = parseInt(container.dataset.downloadId || "0", 10);
+  const nonce = container.dataset.nonce || "";
+  const ajaxUrl = container.dataset.ajaxUrl || window.ajaxurl;
+  render(
+    /* @__PURE__ */ React3.createElement(
+      ChangelogSync,
+      {
+        downloadId,
+        nonce,
+        ajaxUrl,
+        isFeatureAvailable: false,
+        lastSync: 0,
+        isLinked: false
       }
-    }
-    return null;
-  };
-  const checkForGitHubFiles = () => {
-    const fileInputs = document.querySelectorAll(EDD_SELECTORS.UPLOAD_FIELD);
-    let foundGitHub = false;
-    const currentGitHubFile = getFirstGitHubFile();
-    for (let i = 0; i < fileInputs.length; i++) {
-      const input = fileInputs[i];
-      if (input.value && input.value.startsWith(GITHUB_PROTOCOL)) {
-        foundGitHub = true;
-        break;
-      }
-    }
-    if (isMountedRef.current) {
-      setHasGitHubFiles(foundGitHub);
-      if (linkedGitHubFileRef.current && currentGitHubFile !== linkedGitHubFileRef.current) {
-        linkedGitHubFileRef.current = null;
-        return true;
-      }
-    }
-    return false;
-  };
-  const startPolling = (onFileChange) => {
-    const pollInterval = window.setInterval(() => {
-      const currentInputs = document.querySelectorAll(EDD_SELECTORS.UPLOAD_FIELD);
-      currentInputs.forEach((input) => {
-        const currentValue = input.value;
-        const previousValue = input.getAttribute("data-prev-value");
-        if (currentValue !== previousValue) {
-          input.setAttribute("data-prev-value", currentValue);
-          if (checkForGitHubFiles() && onFileChange) {
-            onFileChange();
-          }
-        }
-      });
-    }, INTERVALS.POLL);
-    return pollInterval;
-  };
-  useEffect2(() => {
+    ),
+    container
+  );
+};
+
+// src/hooks/useFileInputMonitor.ts
+import { useEffect, useRef, useState } from "react";
+function useFileInputMonitor({
+  initialUrl,
+  rootElement,
+  onUrlChange,
+  debounceDelay = INTERVALS.DEBOUNCE,
+  pollInterval = INTERVALS.POLL
+}) {
+  const [currentUrl, setCurrentUrl] = useState(initialUrl);
+  const isMountedRef = useRef(true);
+  useEffect(() => {
     isMountedRef.current = true;
-    checkForGitHubFiles();
+    const statusElement = rootElement || document.querySelector(`[data-file-url="${initialUrl}"]`);
+    if (!statusElement) return;
+    const wrapper = statusElement.closest(EDD_SELECTORS.UPLOAD_WRAPPER);
+    if (!wrapper) return;
+    const fileInput = wrapper.querySelector(EDD_SELECTORS.UPLOAD_FIELD);
+    if (!fileInput) return;
+    let debounceTimer = null;
+    let lastValue = fileInput.value;
+    const handleInputChange = () => {
+      const newValue = fileInput.value;
+      if (newValue === lastValue) return;
+      lastValue = newValue;
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+      setCurrentUrl(newValue);
+      if (newValue?.startsWith(GITHUB_PROTOCOL)) {
+        debounceTimer = window.setTimeout(() => {
+          if (isMountedRef.current) {
+            onUrlChange(newValue);
+          }
+        }, debounceDelay);
+      } else {
+        onUrlChange(newValue);
+      }
+    };
+    fileInput.addEventListener("input", handleInputChange);
+    fileInput.addEventListener("change", handleInputChange);
+    const poll = window.setInterval(() => {
+      const currentValue = fileInput.value;
+      if (currentValue !== lastValue) {
+        handleInputChange();
+      }
+    }, pollInterval);
     return () => {
       isMountedRef.current = false;
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+      clearInterval(poll);
+      fileInput.removeEventListener("input", handleInputChange);
+      fileInput.removeEventListener("change", handleInputChange);
     };
-  }, []);
-  return {
-    hasGitHubFiles,
-    linkedGitHubFileRef,
-    getFirstGitHubFile,
-    checkForGitHubFiles,
-    startPolling
-  };
+  }, [rootElement, initialUrl, onUrlChange, debounceDelay, pollInterval]);
+  return { currentUrl };
 }
-
-// src/hooks/useTokenValidation.ts
-import { useState as useState2, useEffect as useEffect3 } from "react";
-
-// src/services/GitHubService.ts
-var GitHubServiceClass = class {
-  constructor(fetcher = fetch.bind(globalThis), actions = API_ACTIONS) {
-    this.fetcher = fetcher;
-    this.actions = actions;
-  }
-  /** Create FormData for WordPress AJAX request */
-  createFormData(action, nonce, data) {
-    const formData = new FormData();
-    formData.append("action", action);
-    formData.append("nonce", nonce);
-    if (data) {
-      Object.entries(data).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-    }
-    return formData;
-  }
-  /** Test if a GitHub file exists and get its info */
-  async testFile(ajaxUrl, nonce, fileUrl, signal) {
-    const formData = this.createFormData(this.actions.TEST_FILE, nonce, {
-      file_url: fileUrl
-    });
-    const fetchOptions = {
-      method: "POST",
-      body: formData
-    };
-    if (signal) {
-      fetchOptions.signal = signal;
-    }
-    const response = await this.fetcher(ajaxUrl, fetchOptions);
-    const data = await response.json();
-    if (!data.success) {
-      const error = new Error(data.data?.message || "Test failed");
-      if (data.data?.code) {
-        error.code = data.data.code;
-      }
-      throw error;
-    }
-    return data.data;
-  }
-  /** Test GitHub token connection */
-  async testConnection(ajaxUrl, nonce, token) {
-    const formData = this.createFormData(this.actions.TEST_CONNECTION, nonce, {
-      token
-    });
-    const response = await this.fetcher(ajaxUrl, {
-      method: "POST",
-      body: formData
-    });
-    const data = await response.json();
-    return data.success;
-  }
-  /** Get GitHub API rate limit */
-  async getRateLimit(ajaxUrl, nonce) {
-    const formData = this.createFormData(this.actions.GET_RATE_LIMIT, nonce);
-    try {
-      const response = await this.fetcher(ajaxUrl, {
-        method: "POST",
-        body: formData
-      });
-      const data = await response.json();
-      if (!data.success) {
-        return null;
-      }
-      return data.data?.rate_limit || null;
-    } catch (error) {
-      return null;
-    }
-  }
-};
-var defaultInstance = new GitHubServiceClass();
-var GitHubService = {
-  testFile: defaultInstance.testFile.bind(defaultInstance),
-  testConnection: defaultInstance.testConnection.bind(defaultInstance),
-  getRateLimit: defaultInstance.getRateLimit.bind(defaultInstance)
-};
-var createGitHubService = (fetcher) => new GitHubServiceClass(fetcher);
-
-// src/hooks/useTokenValidation.ts
-function useTokenValidation({
-  initialToken,
-  ajaxUrl,
-  nonce,
-  isConstantDefined,
-  gitHubService = GitHubService
-}) {
-  const [status, setStatus] = useState2("idle");
-  const [rateLimit, setRateLimit] = useState2(null);
-  const [isLoadingRateLimit, setIsLoadingRateLimit] = useState2(false);
-  const validateToken = async (token) => {
-    if (!token && !isConstantDefined) {
-      setStatus("idle");
-      setRateLimit(null);
-      return;
-    }
-    setStatus("checking");
-    try {
-      const isValid = await gitHubService.testConnection(ajaxUrl, nonce, token || "");
-      setStatus(isValid ? "valid" : "invalid");
-      if (isValid) {
-        const limit = await gitHubService.getRateLimit(ajaxUrl, nonce);
-        setRateLimit(limit);
-      } else {
-        setRateLimit(null);
-      }
-    } catch (error) {
-      setStatus("invalid");
-      setRateLimit(null);
-    }
-  };
-  const refreshStatus = async (token) => {
-    if (status === "checking" || isLoadingRateLimit) {
-      return;
-    }
-    if (!token && !isConstantDefined) {
-      return;
-    }
-    setIsLoadingRateLimit(true);
-    try {
-      await validateToken(token);
-    } catch (error) {
-    } finally {
-      setIsLoadingRateLimit(false);
-    }
-  };
-  useEffect3(() => {
-    if (initialToken || isConstantDefined) {
-      validateToken(initialToken);
-    }
-  }, []);
-  return {
-    status,
-    rateLimit,
-    isLoadingRateLimit,
-    validateToken,
-    refreshStatus
-  };
-}
-
-// src/hooks/useFileValidation.ts
-import { useState as useState3, useEffect as useEffect4, useRef as useRef3 } from "react";
 
 // node_modules/.pnpm/dompurify@3.3.0/node_modules/dompurify/dist/purify.es.mjs
 var {
@@ -1449,19 +1308,103 @@ function createDOMPurify() {
 var purify = createDOMPurify();
 
 // src/hooks/useFileValidation.ts
+import { useEffect as useEffect2, useRef as useRef2, useState as useState2 } from "react";
+
+// src/services/GitHubService.ts
+var GitHubServiceClass = class {
+  constructor(fetcher = fetch.bind(globalThis), actions = API_ACTIONS) {
+    this.fetcher = fetcher;
+    this.actions = actions;
+  }
+  /** Create FormData for WordPress AJAX request */
+  createFormData(action, nonce, data) {
+    const formData = new FormData();
+    formData.append("action", action);
+    formData.append("nonce", nonce);
+    if (data) {
+      Object.entries(data).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+    }
+    return formData;
+  }
+  /** Test if a GitHub file exists and get its info */
+  async testFile(ajaxUrl, nonce, fileUrl, signal) {
+    const formData = this.createFormData(this.actions.TEST_FILE, nonce, {
+      file_url: fileUrl
+    });
+    const fetchOptions = {
+      method: "POST",
+      body: formData
+    };
+    if (signal) {
+      fetchOptions.signal = signal;
+    }
+    const response = await this.fetcher(ajaxUrl, fetchOptions);
+    const data = await response.json();
+    if (!data.success) {
+      const error = new Error(data.data?.message || "Test failed");
+      if (data.data?.code) {
+        error.code = data.data.code;
+      }
+      throw error;
+    }
+    if (data.data === void 0) {
+      throw new Error("Test succeeded but returned no data");
+    }
+    return data.data;
+  }
+  /** Test GitHub token connection */
+  async testConnection(ajaxUrl, nonce, token) {
+    const formData = this.createFormData(this.actions.TEST_CONNECTION, nonce, {
+      token
+    });
+    const response = await this.fetcher(ajaxUrl, {
+      method: "POST",
+      body: formData
+    });
+    const data = await response.json();
+    return data.success;
+  }
+  /** Get GitHub API rate limit */
+  async getRateLimit(ajaxUrl, nonce) {
+    const formData = this.createFormData(this.actions.GET_RATE_LIMIT, nonce);
+    try {
+      const response = await this.fetcher(ajaxUrl, {
+        method: "POST",
+        body: formData
+      });
+      const data = await response.json();
+      if (!data.success) {
+        return null;
+      }
+      return data.data?.rate_limit || null;
+    } catch (_error) {
+      return null;
+    }
+  }
+};
+var defaultInstance = new GitHubServiceClass();
+var GitHubService = {
+  testFile: defaultInstance.testFile.bind(defaultInstance),
+  testConnection: defaultInstance.testConnection.bind(defaultInstance),
+  getRateLimit: defaultInstance.getRateLimit.bind(defaultInstance)
+};
+var createGitHubService = (fetcher) => new GitHubServiceClass(fetcher);
+
+// src/hooks/useFileValidation.ts
 function useFileValidation({
   fileUrl,
   ajaxUrl,
   nonce,
-  enabled = true,
   gitHubService = GitHubService
 }) {
-  const [status, setStatus] = useState3("idle");
-  const [result, setResult] = useState3(null);
-  const [error, setError] = useState3(null);
-  const [errorCode, setErrorCode] = useState3(null);
-  const abortControllerRef = useRef3(null);
-  const isMountedRef = useRef3(true);
+  const [status, setStatus] = useState2("idle");
+  const [result, setResult] = useState2(null);
+  const [error, setError] = useState2(null);
+  const [errorCode, setErrorCode] = useState2(null);
+  const abortControllerRef = useRef2(null);
+  const isMountedRef = useRef2(true);
   const testFile = async (urlToTest) => {
     const url = urlToTest || fileUrl;
     if (abortControllerRef.current) {
@@ -1475,12 +1418,7 @@ function useFileValidation({
       setErrorCode(null);
     }
     try {
-      const testResult = await gitHubService.testFile(
-        ajaxUrl,
-        nonce,
-        url,
-        abortController.signal
-      );
+      const testResult = await gitHubService.testFile(ajaxUrl, nonce, url, abortController.signal);
       if (abortController.signal.aborted) {
         return;
       }
@@ -1523,7 +1461,7 @@ function useFileValidation({
       }
     }
   };
-  useEffect4(() => {
+  useEffect2(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
@@ -1542,108 +1480,336 @@ function useFileValidation({
   };
 }
 
-// src/hooks/useFileInputMonitor.ts
-import { useState as useState4, useEffect as useEffect5, useRef as useRef4 } from "react";
-function useFileInputMonitor({
-  initialUrl,
-  rootElement,
-  onUrlChange,
-  debounceDelay = INTERVALS.DEBOUNCE,
-  pollInterval = INTERVALS.POLL
-}) {
-  const [currentUrl, setCurrentUrl] = useState4(initialUrl);
-  const isMountedRef = useRef4(true);
-  useEffect5(() => {
-    isMountedRef.current = true;
-    const statusElement = rootElement || document.querySelector(`[data-file-url="${initialUrl}"]`);
-    if (!statusElement) return;
-    const wrapper = statusElement.closest(EDD_SELECTORS.UPLOAD_WRAPPER);
-    if (!wrapper) return;
-    const fileInput = wrapper.querySelector(EDD_SELECTORS.UPLOAD_FIELD);
-    if (!fileInput) return;
-    let debounceTimer = null;
-    let lastValue = fileInput.value;
-    const handleInputChange = () => {
-      const newValue = fileInput.value;
-      if (newValue === lastValue) return;
-      lastValue = newValue;
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
+// src/hooks/useGitHubFiles.ts
+import { useEffect as useEffect3, useRef as useRef3, useState as useState3 } from "react";
+function useGitHubFiles() {
+  const [hasGitHubFiles, setHasGitHubFiles] = useState3(false);
+  const linkedGitHubFileRef = useRef3(null);
+  const isMountedRef = useRef3(true);
+  const getFirstGitHubFile = () => {
+    const fileInputs = document.querySelectorAll(
+      EDD_SELECTORS.UPLOAD_FIELD
+    );
+    for (let i = 0; i < fileInputs.length; i++) {
+      const input = fileInputs[i];
+      if (input.value?.startsWith(GITHUB_PROTOCOL)) {
+        return input.value;
       }
-      setCurrentUrl(newValue);
-      if (newValue && newValue.startsWith(GITHUB_PROTOCOL)) {
-        debounceTimer = window.setTimeout(() => {
-          if (isMountedRef.current) {
-            onUrlChange(newValue);
+    }
+    return null;
+  };
+  const checkForGitHubFiles = () => {
+    const fileInputs = document.querySelectorAll(
+      EDD_SELECTORS.UPLOAD_FIELD
+    );
+    let foundGitHub = false;
+    const currentGitHubFile = getFirstGitHubFile();
+    for (let i = 0; i < fileInputs.length; i++) {
+      const input = fileInputs[i];
+      if (input.value?.startsWith(GITHUB_PROTOCOL)) {
+        foundGitHub = true;
+        break;
+      }
+    }
+    if (isMountedRef.current) {
+      setHasGitHubFiles(foundGitHub);
+      if (linkedGitHubFileRef.current && currentGitHubFile !== linkedGitHubFileRef.current) {
+        linkedGitHubFileRef.current = null;
+        return true;
+      }
+    }
+    return false;
+  };
+  const startPolling = (onFileChange) => {
+    const pollInterval = window.setInterval(() => {
+      const currentInputs = document.querySelectorAll(
+        EDD_SELECTORS.UPLOAD_FIELD
+      );
+      currentInputs.forEach((input) => {
+        const currentValue = input.value;
+        const previousValue = input.getAttribute("data-prev-value");
+        if (currentValue !== previousValue) {
+          input.setAttribute("data-prev-value", currentValue);
+          if (checkForGitHubFiles() && onFileChange) {
+            onFileChange();
           }
-        }, debounceDelay);
-      } else {
-        onUrlChange(newValue);
-      }
-    };
-    fileInput.addEventListener("input", handleInputChange);
-    fileInput.addEventListener("change", handleInputChange);
-    const poll = window.setInterval(() => {
-      const currentValue = fileInput.value;
-      if (currentValue !== lastValue) {
-        handleInputChange();
-      }
-    }, pollInterval);
+        }
+      });
+    }, INTERVALS.POLL);
+    return pollInterval;
+  };
+  useEffect3(() => {
+    isMountedRef.current = true;
+    checkForGitHubFiles();
     return () => {
       isMountedRef.current = false;
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-      clearInterval(poll);
-      fileInput.removeEventListener("input", handleInputChange);
-      fileInput.removeEventListener("change", handleInputChange);
     };
-  }, [rootElement, initialUrl, onUrlChange, debounceDelay, pollInterval]);
-  return { currentUrl };
+  }, []);
+  return {
+    hasGitHubFiles,
+    linkedGitHubFileRef,
+    getFirstGitHubFile,
+    checkForGitHubFiles,
+    startPolling
+  };
 }
 
-// src/components/ProBadge.tsx
-import React from "react";
-var ProBadge = ({
-  label,
-  icon,
-  showWrapper = true,
-  renderAsLink = true,
-  href,
-  text: text2,
-  status = "default",
-  openInNewWindow = true
+// src/hooks/usePolling.ts
+import { useEffect as useEffect4, useRef as useRef4 } from "react";
+function usePolling(callback, interval, enabled = true) {
+  const intervalRef = useRef4(null);
+  const callbackRef = useRef4(callback);
+  useEffect4(() => {
+    callbackRef.current = callback;
+  }, [callback]);
+  useEffect4(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    if (enabled && interval > 0) {
+      intervalRef.current = setInterval(() => {
+        callbackRef.current();
+      }, interval);
+    }
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [interval, enabled]);
+  const stopPolling = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+  const trigger = () => {
+    callbackRef.current();
+  };
+  return {
+    stopPolling,
+    trigger
+  };
+}
+function useTimeouts() {
+  const timeoutsRef = useRef4(/* @__PURE__ */ new Set());
+  const setTrackedTimeout = (callback, delay) => {
+    const timeoutId = setTimeout(() => {
+      callback();
+      timeoutsRef.current.delete(timeoutId);
+    }, delay);
+    timeoutsRef.current.add(timeoutId);
+    return timeoutId;
+  };
+  const clearTrackedTimeout = (timeoutId) => {
+    clearTimeout(timeoutId);
+    timeoutsRef.current.delete(timeoutId);
+  };
+  const clearAllTimeouts = () => {
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current.clear();
+  };
+  useEffect4(() => {
+    return () => {
+      clearAllTimeouts();
+    };
+  }, []);
+  return {
+    setTrackedTimeout,
+    clearTrackedTimeout,
+    clearAllTimeouts
+  };
+}
+
+// src/hooks/useTokenValidation.ts
+import { useEffect as useEffect5, useState as useState4 } from "react";
+function useTokenValidation({
+  initialToken,
+  ajaxUrl,
+  nonce,
+  isConstantDefined,
+  gitHubService = GitHubService
+}) {
+  const [status, setStatus] = useState4("idle");
+  const [rateLimit, setRateLimit] = useState4(null);
+  const [isLoadingRateLimit, setIsLoadingRateLimit] = useState4(false);
+  const validateToken = async (token) => {
+    if (!token && !isConstantDefined) {
+      setStatus("idle");
+      setRateLimit(null);
+      return;
+    }
+    setStatus("checking");
+    try {
+      const isValid = await gitHubService.testConnection(ajaxUrl, nonce, token || "");
+      setStatus(isValid ? "valid" : "invalid");
+      if (isValid) {
+        const limit = await gitHubService.getRateLimit(ajaxUrl, nonce);
+        setRateLimit(limit);
+      } else {
+        setRateLimit(null);
+      }
+    } catch (_error) {
+      setStatus("invalid");
+      setRateLimit(null);
+    }
+  };
+  const refreshStatus = async (token) => {
+    if (status === "checking" || isLoadingRateLimit) {
+      return;
+    }
+    if (!token && !isConstantDefined) {
+      return;
+    }
+    setIsLoadingRateLimit(true);
+    try {
+      await validateToken(token);
+    } catch (_error) {
+    } finally {
+      setIsLoadingRateLimit(false);
+    }
+  };
+  useEffect5(() => {
+    if (initialToken || isConstantDefined) {
+      validateToken(initialToken);
+    }
+  }, []);
+  return {
+    status,
+    rateLimit,
+    isLoadingRateLimit,
+    validateToken,
+    refreshStatus
+  };
+}
+
+// src/metabox/FileStatus.tsx
+import React4 from "react";
+var FileStatus = ({
+  fileUrl: initialUrl,
+  rootElement
 }) => {
-  const badgeText = text2 || getString("common.getPro");
-  const statusClass = status !== "default" ? ` arts-license-pro-badge_${status}` : "";
-  const badgeClassName = `arts-license-pro-badge${statusClass}`;
-  const shouldRenderAsLink = renderAsLink && href;
-  const badge = shouldRenderAsLink ? /* @__PURE__ */ React.createElement(
-    "a",
-    {
-      href,
-      className: badgeClassName,
-      "aria-label": `${badgeText} - Pro feature`,
-      ...openInNewWindow && { target: "_blank", rel: "noopener noreferrer" }
-    },
-    badgeText
-  ) : /* @__PURE__ */ React.createElement(
+  const ajaxUrl = window.releaseDeployEDD?.ajaxUrl || "";
+  const nonce = window.releaseDeployEDD?.contexts?.settings?.nonce || window.releaseDeployEDD?.contexts?.browser?.nonce || "";
+  const { status, result, error, errorCode, testFile } = useFileValidation({
+    fileUrl: initialUrl,
+    ajaxUrl,
+    nonce,
+    enabled: false
+    // We'll trigger manually when URL changes
+  });
+  const noOp = React4.useCallback(() => {
+  }, []);
+  const { currentUrl } = useFileInputMonitor({
+    initialUrl,
+    rootElement,
+    onUrlChange: noOp
+    // Stable empty callback since we handle changes via useEffect
+  });
+  const lastTestedUrl = React4.useRef("");
+  React4.useEffect(() => {
+    if (currentUrl?.startsWith(GITHUB_PROTOCOL)) {
+      if (currentUrl !== lastTestedUrl.current) {
+        lastTestedUrl.current = currentUrl;
+        testFile(currentUrl);
+      }
+    }
+  }, [currentUrl]);
+  if (!currentUrl?.startsWith(GITHUB_PROTOCOL)) {
+    return null;
+  }
+  if (status === "idle") {
+    return null;
+  }
+  return /* @__PURE__ */ React4.createElement(
     "span",
     {
-      className: badgeClassName,
-      role: "status",
-      "aria-label": `${badgeText} - Pro feature`
+      onClick: () => status !== "testing" && testFile(currentUrl),
+      className: `release-deploy-edd-file-status release-deploy-edd-file-status_${status}`,
+      title: status === "ready" ? getString("file.retest") : status === "error" ? getString("file.retry") : ""
     },
-    badgeText
+    status === "testing" && /* @__PURE__ */ React4.createElement("span", { className: "release-deploy-edd-file-status__message" }, /* @__PURE__ */ React4.createElement("span", { className: "release-deploy-edd-icon_loading" }), getString("file.testing")),
+    status === "ready" && result && /* @__PURE__ */ React4.createElement("span", { className: "release-deploy-edd-file-status__message" }, /* @__PURE__ */ React4.createElement("span", { className: "release-deploy-edd-icon_success" }), getString("file.ready"), " (", formatSize(result.size), ")"),
+    status === "error" && /* @__PURE__ */ React4.createElement(React4.Fragment, null, /* @__PURE__ */ React4.createElement("span", { className: "release-deploy-edd-file-status__message" }, /* @__PURE__ */ React4.createElement("span", { className: "release-deploy-edd-icon_error" }), error), errorCode === "pro_feature" && /* @__PURE__ */ React4.createElement(React4.Fragment, null, " ", /* @__PURE__ */ React4.createElement(
+      ProBadge,
+      {
+        showWrapper: false,
+        renderAsLink: true,
+        href: window.releaseDeployEDD?.purchaseUrl || "#",
+        text: getString("common.getPro"),
+        status: "default"
+      }
+    )), error?.toLowerCase().includes("token") && /* @__PURE__ */ React4.createElement(React4.Fragment, null, " ", /* @__PURE__ */ React4.createElement(
+      ProBadge,
+      {
+        showWrapper: false,
+        renderAsLink: true,
+        href: window.releaseDeployEDD?.settingsUrl || "#",
+        text: getString("common.fixIt"),
+        status: "warning"
+      }
+    )))
   );
-  if (!showWrapper) {
-    return badge;
-  }
-  return /* @__PURE__ */ React.createElement("span", { className: "arts-license-pro-badge-wrapper" }, icon && /* @__PURE__ */ React.createElement("span", { className: `dashicons ${icon}`, role: "img", "aria-hidden": "true" }), label && /* @__PURE__ */ React.createElement("span", { className: "arts-license-pro-badge-wrapper__label" }, label), badge);
 };
 
+// src/metabox/inject-sync-ui.ts
+function injectVersionSyncUI() {
+  const metaboxData = window.releaseDeployEDD?.contexts?.metabox;
+  if (!metaboxData?.versionSync?.enabled) {
+    return;
+  }
+  setTimeout(() => {
+    const versionField = document.querySelector(EDD_SELECTORS.VERSION_FIELD);
+    if (!versionField) {
+      return;
+    }
+    const isPro = window.releaseDeployEDD?.features?.versionSync || false;
+    const rootSuffix = isPro ? "pro" : "free";
+    const rootElement = document.createElement("div");
+    rootElement.id = `release-deploy-edd-version-sync-${rootSuffix}-root`;
+    rootElement.className = "release-deploy-edd-sync-root";
+    const nextNode = versionField.nextSibling;
+    if (nextNode && nextNode.nodeType === Node.TEXT_NODE) {
+      versionField.parentNode?.insertBefore(rootElement, nextNode.nextSibling);
+    } else {
+      versionField.parentNode?.insertBefore(rootElement, versionField.nextSibling);
+    }
+    document.dispatchEvent(new CustomEvent("release-deploy-edd-version-sync-ready"));
+  }, 100);
+}
+function injectChangelogSyncUI() {
+  const metaboxData = window.releaseDeployEDD?.contexts?.metabox;
+  if (!metaboxData?.changelogSync?.enabled) {
+    return;
+  }
+  const _changelogSyncData = metaboxData.changelogSync;
+  setTimeout(() => {
+    const changelogField = document.querySelector(EDD_SELECTORS.CHANGELOG_FIELD);
+    if (!changelogField) {
+      return;
+    }
+    const isPro = window.releaseDeployEDD?.features?.changelogSync || false;
+    const rootSuffix = isPro ? "pro" : "free";
+    const rootElement = document.createElement("div");
+    rootElement.id = `release-deploy-edd-changelog-sync-${rootSuffix}-root`;
+    rootElement.className = "release-deploy-edd-sync-root";
+    const changelogLabel = document.querySelector(EDD_SELECTORS.CHANGELOG_LABEL);
+    if (changelogLabel) {
+      changelogLabel.appendChild(rootElement);
+    } else {
+      changelogField.parentNode?.insertBefore(rootElement, changelogField.nextSibling);
+    }
+    document.dispatchEvent(new CustomEvent("release-deploy-edd-changelog-sync-ready"));
+  }, 100);
+}
+
+// src/settings/SettingsApp.tsx
+import React6 from "react";
+
 // src/settings/TokenField.tsx
-import React2 from "react";
+import React5 from "react";
 var { useState: useState5 } = wp.element;
 var { TextControl, Button, Notice } = wp.components;
 var TokenField = ({ initialValue, onChange }) => {
@@ -1664,7 +1830,7 @@ var TokenField = ({ initialValue, onChange }) => {
     onChange(newValue);
   };
   const handleBlur = () => {
-    if (value && value.trim()) {
+    if (value?.trim()) {
       validateToken(value);
     }
   };
@@ -1703,7 +1869,7 @@ var TokenField = ({ initialValue, onChange }) => {
     return { text: "", icon: "", fullText: "", isClickable: false };
   };
   const statusContent = getStatusContent();
-  return /* @__PURE__ */ React2.createElement("div", null, /* @__PURE__ */ React2.createElement("div", { className: "release-deploy-edd-token-field" }, /* @__PURE__ */ React2.createElement(
+  return /* @__PURE__ */ React5.createElement("div", null, /* @__PURE__ */ React5.createElement("div", { className: "release-deploy-edd-token-field" }, /* @__PURE__ */ React5.createElement(
     TextControl,
     {
       type: showPassword ? "text" : "password",
@@ -1715,7 +1881,7 @@ var TokenField = ({ initialValue, onChange }) => {
       help: isConstantDefined ? getString("token.constantHelp") : getString("token.enterHelp"),
       className: isConstantDefined ? "release-deploy-edd-token-field__input_constant" : ""
     }
-  ), !isConstantDefined && /* @__PURE__ */ React2.createElement(
+  ), !isConstantDefined && /* @__PURE__ */ React5.createElement(
     "button",
     {
       type: "button",
@@ -1723,154 +1889,39 @@ var TokenField = ({ initialValue, onChange }) => {
       className: "release-deploy-edd-token-field__toggle",
       "aria-label": showPassword ? getString("token.hide") : getString("token.show")
     },
-    /* @__PURE__ */ React2.createElement(
+    /* @__PURE__ */ React5.createElement(
       "span",
       {
         className: `dashicons ${showPassword ? "dashicons-hidden" : "dashicons-visibility"}`
       }
     )
-  )), /* @__PURE__ */ React2.createElement(
+  )), /* @__PURE__ */ React5.createElement(
     "div",
     {
       className: `release-deploy-edd-token-status release-deploy-edd-token-status_${status}${statusContent.isClickable ? " release-deploy-edd-token-status_clickable" : ""}`,
       onClick: statusContent.isClickable ? handleRefresh : void 0,
       title: statusContent.isClickable ? getString("token.refresh") : ""
     },
-    statusContent.icon && /* @__PURE__ */ React2.createElement("span", { className: `release-deploy-edd-token-status__icon ${statusContent.icon}` }),
-    /* @__PURE__ */ React2.createElement("span", { className: "release-deploy-edd-token-status__text" }, statusContent.fullText)
-  ), !isConstantDefined && /* @__PURE__ */ React2.createElement("div", { className: "release-deploy-edd-token-instructions-toggle" }, /* @__PURE__ */ React2.createElement(Button, { variant: "link", onClick: () => setShowInstructions(!showInstructions) }, showInstructions ? "\u25BC" : "\u25B6", " ", getString("token.howToCreate"))), showInstructions && !isConstantDefined && /* @__PURE__ */ React2.createElement(Notice, { status: "info" }, /* @__PURE__ */ React2.createElement("ol", { className: "release-deploy-edd-token-instructions" }, /* @__PURE__ */ React2.createElement("li", null, getString("token.instruction1")), /* @__PURE__ */ React2.createElement("li", null, getString("token.instruction2")), /* @__PURE__ */ React2.createElement("li", null, getString("token.instruction3")), /* @__PURE__ */ React2.createElement("li", null, getString("token.instruction4")), /* @__PURE__ */ React2.createElement("li", null, getString("token.instruction5")), /* @__PURE__ */ React2.createElement("li", null, getString("token.instruction6")))), !isConstantDefined && /* @__PURE__ */ React2.createElement("input", { type: "hidden", name: "edd_settings[edd_release_deploy_token]", value }));
+    statusContent.icon && /* @__PURE__ */ React5.createElement("span", { className: `release-deploy-edd-token-status__icon ${statusContent.icon}` }),
+    /* @__PURE__ */ React5.createElement("span", { className: "release-deploy-edd-token-status__text" }, statusContent.fullText)
+  ), !isConstantDefined && /* @__PURE__ */ React5.createElement("div", { className: "release-deploy-edd-token-instructions-toggle" }, /* @__PURE__ */ React5.createElement(Button, { variant: "link", onClick: () => setShowInstructions(!showInstructions) }, showInstructions ? "\u25BC" : "\u25B6", " ", getString("token.howToCreate"))), showInstructions && !isConstantDefined && /* @__PURE__ */ React5.createElement(Notice, { status: "info" }, /* @__PURE__ */ React5.createElement("ol", { className: "release-deploy-edd-token-instructions" }, /* @__PURE__ */ React5.createElement("li", null, getString("token.instruction1")), /* @__PURE__ */ React5.createElement("li", null, getString("token.instruction2")), /* @__PURE__ */ React5.createElement("li", null, getString("token.instruction3")), /* @__PURE__ */ React5.createElement("li", null, getString("token.instruction4")), /* @__PURE__ */ React5.createElement("li", null, getString("token.instruction5")), /* @__PURE__ */ React5.createElement("li", null, getString("token.instruction6")))), !isConstantDefined && /* @__PURE__ */ React5.createElement("input", { type: "hidden", name: "edd_settings[edd_release_deploy_token]", value }));
 };
 
 // src/settings/SettingsApp.tsx
-import React3 from "react";
 var { useState: useState6 } = wp.element;
 var SettingsApp = () => {
   const [token, setToken] = useState6(window.releaseDeployEDD?.contexts?.settings?.token || "");
-  return /* @__PURE__ */ React3.createElement("div", { className: "release-deploy-edd-settings" }, /* @__PURE__ */ React3.createElement(TokenField, { initialValue: token, onChange: setToken }));
+  return /* @__PURE__ */ React6.createElement("div", { className: "release-deploy-edd-settings" }, /* @__PURE__ */ React6.createElement(TokenField, { initialValue: token, onChange: setToken }));
 };
 
-// src/metabox/inject-sync-ui.ts
-function injectVersionSyncUI() {
-  const metaboxData = window.releaseDeployEDD?.contexts?.metabox;
-  if (!metaboxData?.versionSync?.enabled) {
-    return;
-  }
-  setTimeout(() => {
-    const versionField = document.querySelector(EDD_SELECTORS.VERSION_FIELD);
-    if (!versionField) {
-      return;
-    }
-    const isPro = window.releaseDeployEDD?.features?.versionSync || false;
-    const rootSuffix = isPro ? "pro" : "free";
-    const rootElement = document.createElement("div");
-    rootElement.id = `release-deploy-edd-version-sync-${rootSuffix}-root`;
-    rootElement.className = "release-deploy-edd-sync-root";
-    const nextNode = versionField.nextSibling;
-    if (nextNode && nextNode.nodeType === Node.TEXT_NODE) {
-      versionField.parentNode?.insertBefore(rootElement, nextNode.nextSibling);
-    } else {
-      versionField.parentNode?.insertBefore(rootElement, versionField.nextSibling);
-    }
-    document.dispatchEvent(new CustomEvent("release-deploy-edd-version-sync-ready"));
-  }, 100);
-}
-function injectChangelogSyncUI() {
-  const metaboxData = window.releaseDeployEDD?.contexts?.metabox;
-  if (!metaboxData?.changelogSync?.enabled) {
-    return;
-  }
-  const changelogSyncData = metaboxData.changelogSync;
-  setTimeout(() => {
-    const changelogField = document.querySelector(EDD_SELECTORS.CHANGELOG_FIELD);
-    if (!changelogField) {
-      return;
-    }
-    const isPro = window.releaseDeployEDD?.features?.changelogSync || false;
-    const rootSuffix = isPro ? "pro" : "free";
-    const rootElement = document.createElement("div");
-    rootElement.id = `release-deploy-edd-changelog-sync-${rootSuffix}-root`;
-    rootElement.className = "release-deploy-edd-sync-root";
-    const changelogLabel = document.querySelector(EDD_SELECTORS.CHANGELOG_LABEL);
-    if (changelogLabel) {
-      changelogLabel.appendChild(rootElement);
-    } else {
-      changelogField.parentNode?.insertBefore(rootElement, changelogField.nextSibling);
-    }
-    document.dispatchEvent(new CustomEvent("release-deploy-edd-changelog-sync-ready"));
-  }, 100);
-}
-
-// src/metabox/FileStatus.tsx
-import React4 from "react";
-var FileStatus = ({ fileUrl: initialUrl, rootElement }) => {
-  const ajaxUrl = window.releaseDeployEDD?.ajaxUrl || "";
-  const nonce = window.releaseDeployEDD?.contexts?.settings?.nonce || window.releaseDeployEDD?.contexts?.browser?.nonce || "";
-  const { status, result, error, errorCode, testFile } = useFileValidation({
-    fileUrl: initialUrl,
-    ajaxUrl,
-    nonce,
-    enabled: false
-    // We'll trigger manually when URL changes
-  });
-  const noOp = React4.useCallback(() => {
-  }, []);
-  const { currentUrl } = useFileInputMonitor({
-    initialUrl,
-    rootElement,
-    onUrlChange: noOp
-    // Stable empty callback since we handle changes via useEffect
-  });
-  const lastTestedUrl = React4.useRef("");
-  React4.useEffect(() => {
-    if (currentUrl && currentUrl.startsWith(GITHUB_PROTOCOL)) {
-      if (currentUrl !== lastTestedUrl.current) {
-        lastTestedUrl.current = currentUrl;
-        testFile(currentUrl);
-      }
-    }
-  }, [currentUrl]);
-  if (!currentUrl || !currentUrl.startsWith(GITHUB_PROTOCOL)) {
-    return null;
-  }
-  if (status === "idle") {
-    return null;
-  }
-  return /* @__PURE__ */ React4.createElement(
-    "span",
-    {
-      onClick: () => status !== "testing" && testFile(currentUrl),
-      className: `release-deploy-edd-file-status release-deploy-edd-file-status_${status}`,
-      title: status === "ready" ? getString("file.retest") : status === "error" ? getString("file.retry") : ""
-    },
-    status === "testing" && /* @__PURE__ */ React4.createElement(React4.Fragment, null, /* @__PURE__ */ React4.createElement("span", { className: "release-deploy-edd-file-status__message" }, /* @__PURE__ */ React4.createElement("span", { className: "release-deploy-edd-icon_loading" }), getString("file.testing"))),
-    status === "ready" && result && /* @__PURE__ */ React4.createElement("span", { className: "release-deploy-edd-file-status__message" }, /* @__PURE__ */ React4.createElement("span", { className: "release-deploy-edd-icon_success" }), getString("file.ready"), " (", formatSize(result.size), ")"),
-    status === "error" && /* @__PURE__ */ React4.createElement(React4.Fragment, null, /* @__PURE__ */ React4.createElement("span", { className: "release-deploy-edd-file-status__message" }, /* @__PURE__ */ React4.createElement("span", { className: "release-deploy-edd-icon_error" }), error), errorCode === "pro_feature" && /* @__PURE__ */ React4.createElement(React4.Fragment, null, " ", /* @__PURE__ */ React4.createElement(
-      ProBadge,
-      {
-        showWrapper: false,
-        renderAsLink: true,
-        href: window.releaseDeployEDD?.purchaseUrl || "#",
-        text: getString("common.getPro"),
-        status: "default"
-      }
-    )), error && error.toLowerCase().includes("token") && /* @__PURE__ */ React4.createElement(React4.Fragment, null, " ", /* @__PURE__ */ React4.createElement(
-      ProBadge,
-      {
-        showWrapper: false,
-        renderAsLink: true,
-        href: window.releaseDeployEDD?.settingsUrl || "#",
-        text: getString("common.fixIt"),
-        status: "warning"
-      }
-    )))
-  );
-};
+// src/version-sync/init.tsx
+import React8 from "react";
 
 // src/version-sync/VersionSync.tsx
-import React5 from "react";
+import React7 from "react";
 var VersionSync = (_props) => {
   const purchaseUrl = window.releaseDeployEDD?.purchaseUrl || "";
-  return /* @__PURE__ */ React5.createElement(
+  return /* @__PURE__ */ React7.createElement(
     ProBadge,
     {
       label: getString("sync.autoVersionSync"),
@@ -1886,18 +1937,17 @@ var VersionSync = (_props) => {
 };
 
 // src/version-sync/init.tsx
-import React6 from "react";
-var { render } = wp.element;
+var { render: render2 } = wp.element;
 var initVersionSync = () => {
   const container = document.getElementById("release-deploy-edd-version-sync-free-root");
   if (!container) {
     return;
   }
-  const downloadId = parseInt(container.dataset["downloadId"] || "0");
-  const nonce = container.dataset["nonce"] || "";
-  const ajaxUrl = container.dataset["ajaxUrl"] || window.ajaxurl;
-  render(
-    /* @__PURE__ */ React6.createElement(
+  const downloadId = parseInt(container.dataset.downloadId || "0", 10);
+  const nonce = container.dataset.nonce || "";
+  const ajaxUrl = container.dataset.ajaxUrl || window.ajaxurl;
+  render2(
+    /* @__PURE__ */ React8.createElement(
       VersionSync,
       {
         downloadId,
@@ -1907,52 +1957,6 @@ var initVersionSync = () => {
         nonce,
         ajaxUrl,
         isFeatureAvailable: false
-      }
-    ),
-    container
-  );
-};
-
-// src/changelog-sync/ChangelogSync.tsx
-import React7 from "react";
-var ChangelogSync = (_props) => {
-  const purchaseUrl = window.releaseDeployEDD?.purchaseUrl || "";
-  return /* @__PURE__ */ React7.createElement(
-    ProBadge,
-    {
-      label: getString("sync.autoChangelogSync"),
-      icon: "dashicons-media-document",
-      text: getString("common.getPro"),
-      showWrapper: true,
-      renderAsLink: true,
-      href: purchaseUrl,
-      status: "default",
-      openInNewWindow: true
-    }
-  );
-};
-
-// src/changelog-sync/init.tsx
-import React8 from "react";
-var { render: render2 } = wp.element;
-var initChangelogSync = () => {
-  const container = document.getElementById("release-deploy-edd-changelog-sync-free-root");
-  if (!container) {
-    return;
-  }
-  const downloadId = parseInt(container.dataset["downloadId"] || "0");
-  const nonce = container.dataset["nonce"] || "";
-  const ajaxUrl = container.dataset["ajaxUrl"] || window.ajaxurl;
-  render2(
-    /* @__PURE__ */ React8.createElement(
-      ChangelogSync,
-      {
-        downloadId,
-        nonce,
-        ajaxUrl,
-        isFeatureAvailable: false,
-        lastSync: 0,
-        isLinked: false
       }
     ),
     container

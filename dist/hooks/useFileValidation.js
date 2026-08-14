@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
+import { useEffect, useRef, useState } from 'react';
 import { GitHubService } from '../services';
 import { getString } from '../utils';
 /**
@@ -9,7 +9,7 @@ import { getString } from '../utils';
  * @param config - Configuration object
  * @returns File validation state and functions
  */
-export function useFileValidation({ fileUrl, ajaxUrl, nonce, enabled = true, gitHubService = GitHubService }) {
+export function useFileValidation({ fileUrl, ajaxUrl, nonce, gitHubService = GitHubService }) {
     const [status, setStatus] = useState('idle');
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);

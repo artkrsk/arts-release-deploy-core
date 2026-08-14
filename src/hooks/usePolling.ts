@@ -4,11 +4,7 @@ import { useEffect, useRef } from 'react'
  * Hook for managing polling intervals with automatic cleanup
  * Ensures intervals are properly cleaned up to prevent memory leaks
  */
-export function usePolling(
-  callback: () => void,
-  interval: number,
-  enabled: boolean = true
-) {
+export function usePolling(callback: () => void, interval: number, enabled: boolean = true) {
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const callbackRef = useRef(callback)
 

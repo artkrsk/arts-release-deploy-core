@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { GITHUB_PROTOCOL, INTERVALS, EDD_SELECTORS } from '../constants';
+import { useEffect, useRef, useState } from 'react';
+import { EDD_SELECTORS, GITHUB_PROTOCOL, INTERVALS } from '../constants';
 /**
  * Hook for detecting and monitoring GitHub files in EDD download file fields
  * Extracts common logic from VersionSync and ChangelogSync components
@@ -15,7 +15,7 @@ export function useGitHubFiles() {
         const fileInputs = document.querySelectorAll(EDD_SELECTORS.UPLOAD_FIELD);
         for (let i = 0; i < fileInputs.length; i++) {
             const input = fileInputs[i];
-            if (input.value && input.value.startsWith(GITHUB_PROTOCOL)) {
+            if (input.value?.startsWith(GITHUB_PROTOCOL)) {
                 return input.value;
             }
         }
@@ -31,7 +31,7 @@ export function useGitHubFiles() {
         // Check if any file starts with GitHub protocol
         for (let i = 0; i < fileInputs.length; i++) {
             const input = fileInputs[i];
-            if (input.value && input.value.startsWith(GITHUB_PROTOCOL)) {
+            if (input.value?.startsWith(GITHUB_PROTOCOL)) {
                 foundGitHub = true;
                 break;
             }

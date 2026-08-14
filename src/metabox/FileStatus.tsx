@@ -1,13 +1,17 @@
 import React from 'react'
+import { ProBadge } from '../components'
+import { GITHUB_PROTOCOL } from '../constants'
+import { useFileInputMonitor, useFileValidation } from '../hooks'
 import type { IFileStatusProps } from '../interfaces'
 import { formatSize, getString } from '../utils'
-import { useFileValidation, useFileInputMonitor } from '../hooks'
-import { GITHUB_PROTOCOL } from '../constants'
-import { ProBadge } from '../components'
 
-export const FileStatus = ({ fileUrl: initialUrl, rootElement }: IFileStatusProps): JSX.Element | null => {
+export const FileStatus = ({
+  fileUrl: initialUrl,
+  rootElement
+}: IFileStatusProps): JSX.Element | null => {
   const ajaxUrl = window.releaseDeployEDD?.ajaxUrl || ''
-  const nonce = window.releaseDeployEDD?.contexts?.settings?.nonce ||
+  const nonce =
+    window.releaseDeployEDD?.contexts?.settings?.nonce ||
     window.releaseDeployEDD?.contexts?.browser?.nonce ||
     ''
 
@@ -34,7 +38,7 @@ export const FileStatus = ({ fileUrl: initialUrl, rootElement }: IFileStatusProp
 
   // Test when currentUrl changes (including initial load)
   React.useEffect(() => {
-    if (currentUrl && currentUrl.startsWith(GITHUB_PROTOCOL)) {
+    if (currentUrl?.startsWith(GITHUB_PROTOCOL)) {
       // Only test if URL actually changed
       if (currentUrl !== lastTestedUrl.current) {
         lastTestedUrl.current = currentUrl
@@ -44,7 +48,7 @@ export const FileStatus = ({ fileUrl: initialUrl, rootElement }: IFileStatusProp
   }, [currentUrl]) // Only depend on currentUrl, not testFile
 
   // Don't show if not a GitHub file
-  if (!currentUrl || !currentUrl.startsWith(GITHUB_PROTOCOL)) {
+  if (!currentUrl?.startsWith(GITHUB_PROTOCOL)) {
     return null
   }
 
@@ -66,12 +70,10 @@ export const FileStatus = ({ fileUrl: initialUrl, rootElement }: IFileStatusProp
       }
     >
       {status === 'testing' && (
-        <>
-          <span className="release-deploy-edd-file-status__message">
-            <span className="release-deploy-edd-icon_loading"></span>
-            {getString('file.testing')}
-          </span>
-        </>
+        <span className="release-deploy-edd-file-status__message">
+          <span className="release-deploy-edd-icon_loading"></span>
+          {getString('file.testing')}
+        </span>
       )}
       {status === 'ready' && result && (
         <span className="release-deploy-edd-file-status__message">
@@ -97,7 +99,7 @@ export const FileStatus = ({ fileUrl: initialUrl, rootElement }: IFileStatusProp
               />
             </>
           )}
-          {error && error.toLowerCase().includes('token') && (
+          {error?.toLowerCase().includes('token') && (
             <>
               {' '}
               <ProBadge

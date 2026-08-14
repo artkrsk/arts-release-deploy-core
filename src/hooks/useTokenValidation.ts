@@ -1,7 +1,11 @@
-import { useState, useEffect } from 'react'
-import type { IUseTokenValidationConfig, IUseTokenValidationReturn, IRateLimit } from '../interfaces'
-import type { TValidationStatus } from '../types'
+import { useEffect, useState } from 'react'
+import type {
+  IRateLimit,
+  IUseTokenValidationConfig,
+  IUseTokenValidationReturn
+} from '../interfaces'
 import { GitHubService } from '../services'
+import type { TValidationStatus } from '../types'
 
 /**
  * Custom hook for GitHub token validation and rate limit fetching
@@ -43,7 +47,7 @@ export function useTokenValidation({
       } else {
         setRateLimit(null)
       }
-    } catch (error) {
+    } catch (_error) {
       setStatus('invalid')
       setRateLimit(null)
     }
@@ -64,7 +68,7 @@ export function useTokenValidation({
 
     try {
       await validateToken(token)
-    } catch (error) {
+    } catch (_error) {
       // Error handling is done in validateToken
     } finally {
       setIsLoadingRateLimit(false)

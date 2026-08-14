@@ -1,5 +1,5 @@
 import { API_ACTIONS } from '../constants'
-import { IRateLimit } from '../interfaces'
+import type { IRateLimit } from '../interfaces'
 
 interface ApiResponse<T = any> {
   success: boolean
@@ -63,22 +63,24 @@ class GitHubServiceClass {
     const data: ApiResponse<TestFileResponse> = await response.json()
 
     if (!data.success) {
-      const error = new Error(data.data?.message || 'Test failed') as Error & { code?: string | undefined }
+      const error = new Error(data.data?.message || 'Test failed') as Error & {
+        code?: string | undefined
+      }
       if (data.data?.code) {
         error.code = data.data.code
       }
       throw error
     }
 
-    return data.data!
+    if (data.data === undefined) {
+      throw new Error('Test succeeded but returned no data')
+    }
+
+    return data.data
   }
 
   /** Test GitHub token connection */
-  async testConnection(
-    ajaxUrl: string,
-    nonce: string,
-    token: string
-  ): Promise<boolean> {
+  async testConnection(ajaxUrl: string, nonce: string, token: string): Promise<boolean> {
     const formData = this.createFormData(this.actions.TEST_CONNECTION, nonce, {
       token
     })
@@ -94,10 +96,7 @@ class GitHubServiceClass {
   }
 
   /** Get GitHub API rate limit */
-  async getRateLimit(
-    ajaxUrl: string,
-    nonce: string
-  ): Promise<IRateLimit | null> {
+  async getRateLimit(ajaxUrl: string, nonce: string): Promise<IRateLimit | null> {
     const formData = this.createFormData(this.actions.GET_RATE_LIMIT, nonce)
 
     try {
@@ -113,7 +112,7 @@ class GitHubServiceClass {
       }
 
       return data.data?.rate_limit || null
-    } catch (error) {
+    } catch (_error) {
       return null
     }
   }

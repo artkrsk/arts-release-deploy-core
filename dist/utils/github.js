@@ -1,7 +1,7 @@
 import { GITHUB_PROTOCOL } from '../constants';
 /** Parse GitHub URL to extract components */
 export function parseGitHubUrl(url) {
-    if (!url || !url.startsWith(GITHUB_PROTOCOL)) {
+    if (!url?.startsWith(GITHUB_PROTOCOL)) {
         return null;
     }
     const clean = url.replace(GITHUB_PROTOCOL, '');

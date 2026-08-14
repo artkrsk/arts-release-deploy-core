@@ -48,7 +48,7 @@ export function injectChangelogSyncUI() {
     if (!metaboxData?.changelogSync?.enabled) {
         return;
     }
-    const changelogSyncData = metaboxData.changelogSync;
+    const _changelogSyncData = metaboxData.changelogSync;
     // Wait for EDD SL metabox to render
     setTimeout(() => {
         const changelogField = document.querySelector(EDD_SELECTORS.CHANGELOG_FIELD);

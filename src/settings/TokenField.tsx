@@ -1,7 +1,6 @@
 import React from 'react'
-import type { ITokenFieldProps, IRateLimit } from '../interfaces'
-import type { TValidationStatus } from '../types'
 import { useTokenValidation } from '../hooks'
+import type { ITokenFieldProps } from '../interfaces'
 import { getString } from '../utils'
 
 const { useState } = wp.element
@@ -17,12 +16,13 @@ export const TokenField = ({ initialValue, onChange }: ITokenFieldProps): JSX.El
   const nonce = window.releaseDeployEDD.contexts.settings?.nonce || ''
 
   /** Use validation hook for business logic */
-  const { status, rateLimit, isLoadingRateLimit, validateToken, refreshStatus } = useTokenValidation({
-    initialToken: initialValue,
-    ajaxUrl,
-    nonce,
-    isConstantDefined
-  })
+  const { status, rateLimit, isLoadingRateLimit, validateToken, refreshStatus } =
+    useTokenValidation({
+      initialToken: initialValue,
+      ajaxUrl,
+      nonce,
+      isConstantDefined
+    })
 
   const handleChange = (newValue: string) => {
     setValue(newValue)
@@ -30,7 +30,7 @@ export const TokenField = ({ initialValue, onChange }: ITokenFieldProps): JSX.El
   }
 
   const handleBlur = () => {
-    if (value && value.trim()) {
+    if (value?.trim()) {
       validateToken(value)
     }
   }
@@ -86,17 +86,9 @@ export const TokenField = ({ initialValue, onChange }: ITokenFieldProps): JSX.El
           value={isConstantDefined ? '' : value}
           onChange={handleChange}
           onBlur={handleBlur}
-          placeholder={
-            isConstantDefined
-              ? getString('token.managedViaConstant')
-              : 'github_pat...'
-          }
+          placeholder={isConstantDefined ? getString('token.managedViaConstant') : 'github_pat...'}
           disabled={status === 'checking' || isConstantDefined}
-          help={
-            isConstantDefined
-              ? getString('token.constantHelp')
-              : getString('token.enterHelp')
-          }
+          help={isConstantDefined ? getString('token.constantHelp') : getString('token.enterHelp')}
           className={isConstantDefined ? 'release-deploy-edd-token-field__input_constant' : ''}
         />
         {!isConstantDefined && (
@@ -104,11 +96,7 @@ export const TokenField = ({ initialValue, onChange }: ITokenFieldProps): JSX.El
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="release-deploy-edd-token-field__toggle"
-            aria-label={
-              showPassword
-                ? getString('token.hide')
-                : getString('token.show')
-            }
+            aria-label={showPassword ? getString('token.hide') : getString('token.show')}
           >
             <span
               className={`dashicons ${showPassword ? 'dashicons-hidden' : 'dashicons-visibility'}`}
@@ -130,8 +118,7 @@ export const TokenField = ({ initialValue, onChange }: ITokenFieldProps): JSX.El
       {!isConstantDefined && (
         <div className="release-deploy-edd-token-instructions-toggle">
           <Button variant="link" onClick={() => setShowInstructions(!showInstructions)}>
-            {showInstructions ? '▼' : '▶'}{' '}
-            {getString('token.howToCreate')}
+            {showInstructions ? '▼' : '▶'} {getString('token.howToCreate')}
           </Button>
         </div>
       )}

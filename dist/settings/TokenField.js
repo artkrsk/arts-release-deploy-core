@@ -22,7 +22,7 @@ export const TokenField = ({ initialValue, onChange }) => {
         onChange(newValue);
     };
     const handleBlur = () => {
-        if (value && value.trim()) {
+        if (value?.trim()) {
             validateToken(value);
         }
     };
@@ -63,14 +63,8 @@ export const TokenField = ({ initialValue, onChange }) => {
     const statusContent = getStatusContent();
     return (React.createElement("div", null,
         React.createElement("div", { className: "release-deploy-edd-token-field" },
-            React.createElement(TextControl, { type: showPassword ? 'text' : 'password', value: isConstantDefined ? '' : value, onChange: handleChange, onBlur: handleBlur, placeholder: isConstantDefined
-                    ? getString('token.managedViaConstant')
-                    : 'github_pat...', disabled: status === 'checking' || isConstantDefined, help: isConstantDefined
-                    ? getString('token.constantHelp')
-                    : getString('token.enterHelp'), className: isConstantDefined ? 'release-deploy-edd-token-field__input_constant' : '' }),
-            !isConstantDefined && (React.createElement("button", { type: "button", onClick: () => setShowPassword(!showPassword), className: "release-deploy-edd-token-field__toggle", "aria-label": showPassword
-                    ? getString('token.hide')
-                    : getString('token.show') },
+            React.createElement(TextControl, { type: showPassword ? 'text' : 'password', value: isConstantDefined ? '' : value, onChange: handleChange, onBlur: handleBlur, placeholder: isConstantDefined ? getString('token.managedViaConstant') : 'github_pat...', disabled: status === 'checking' || isConstantDefined, help: isConstantDefined ? getString('token.constantHelp') : getString('token.enterHelp'), className: isConstantDefined ? 'release-deploy-edd-token-field__input_constant' : '' }),
+            !isConstantDefined && (React.createElement("button", { type: "button", onClick: () => setShowPassword(!showPassword), className: "release-deploy-edd-token-field__toggle", "aria-label": showPassword ? getString('token.hide') : getString('token.show') },
                 React.createElement("span", { className: `dashicons ${showPassword ? 'dashicons-hidden' : 'dashicons-visibility'}` })))),
         React.createElement("div", { className: `release-deploy-edd-token-status release-deploy-edd-token-status_${status}${statusContent.isClickable ? ' release-deploy-edd-token-status_clickable' : ''}`, onClick: statusContent.isClickable ? handleRefresh : undefined, title: statusContent.isClickable ? getString('token.refresh') : '' },
             statusContent.icon && (React.createElement("span", { className: `release-deploy-edd-token-status__icon ${statusContent.icon}` })),
@@ -78,7 +72,7 @@ export const TokenField = ({ initialValue, onChange }) => {
         !isConstantDefined && (React.createElement("div", { className: "release-deploy-edd-token-instructions-toggle" },
             React.createElement(Button, { variant: "link", onClick: () => setShowInstructions(!showInstructions) },
                 showInstructions ? '▼' : '▶',
-                ' ',
+                " ",
                 getString('token.howToCreate')))),
         showInstructions && !isConstantDefined && (React.createElement(Notice, { status: "info" },
             React.createElement("ol", { className: "release-deploy-edd-token-instructions" },

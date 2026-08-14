@@ -1,6 +1,6 @@
+import { act, render, screen } from '@testing-library/react'
 import React from 'react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, act } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SettingsApp } from '@/settings/SettingsApp'
 
 // Mock TokenField component
@@ -8,7 +8,9 @@ vi.mock('@/settings/TokenField', () => ({
   TokenField: vi.fn(({ initialValue, onChange }) => (
     <div data-testid="token-field">
       <span data-testid="initial-value">{initialValue || ''}</span>
-      <button onClick={() => onChange('new-token')}>Change Token</button>
+      <button type="button" onClick={() => onChange('new-token')}>
+        Change Token
+      </button>
     </div>
   ))
 }))
@@ -81,7 +83,7 @@ describe('SettingsApp', () => {
     const { rerender } = render(<SettingsApp />)
 
     // Initial value
-    let initialValue = screen.getByTestId('initial-value')
+    const initialValue = screen.getByTestId('initial-value')
     expect(initialValue).toHaveTextContent('github_pat_existing_token')
 
     // Trigger change within act
@@ -100,7 +102,7 @@ describe('SettingsApp', () => {
   })
 
   it('should handle undefined window.releaseDeployEDD', () => {
-    // @ts-ignore - Testing edge case
+    // @ts-expect-error - Testing edge case
     delete window.releaseDeployEDD
 
     render(<SettingsApp />)

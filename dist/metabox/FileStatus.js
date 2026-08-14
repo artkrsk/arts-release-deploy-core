@@ -1,8 +1,8 @@
 import React from 'react';
-import { formatSize, getString } from '../utils';
-import { useFileValidation, useFileInputMonitor } from '../hooks';
-import { GITHUB_PROTOCOL } from '../constants';
 import { ProBadge } from '../components';
+import { GITHUB_PROTOCOL } from '../constants';
+import { useFileInputMonitor, useFileValidation } from '../hooks';
+import { formatSize, getString } from '../utils';
 export const FileStatus = ({ fileUrl: initialUrl, rootElement }) => {
     const ajaxUrl = window.releaseDeployEDD?.ajaxUrl || '';
     const nonce = window.releaseDeployEDD?.contexts?.settings?.nonce ||
@@ -27,7 +27,7 @@ export const FileStatus = ({ fileUrl: initialUrl, rootElement }) => {
     const lastTestedUrl = React.useRef('');
     // Test when currentUrl changes (including initial load)
     React.useEffect(() => {
-        if (currentUrl && currentUrl.startsWith(GITHUB_PROTOCOL)) {
+        if (currentUrl?.startsWith(GITHUB_PROTOCOL)) {
             // Only test if URL actually changed
             if (currentUrl !== lastTestedUrl.current) {
                 lastTestedUrl.current = currentUrl;
@@ -36,7 +36,7 @@ export const FileStatus = ({ fileUrl: initialUrl, rootElement }) => {
         }
     }, [currentUrl]); // Only depend on currentUrl, not testFile
     // Don't show if not a GitHub file
-    if (!currentUrl || !currentUrl.startsWith(GITHUB_PROTOCOL)) {
+    if (!currentUrl?.startsWith(GITHUB_PROTOCOL)) {
         return null;
     }
     // Don't show if no status yet
@@ -48,10 +48,9 @@ export const FileStatus = ({ fileUrl: initialUrl, rootElement }) => {
             : status === 'error'
                 ? getString('file.retry')
                 : '' },
-        status === 'testing' && (React.createElement(React.Fragment, null,
-            React.createElement("span", { className: "release-deploy-edd-file-status__message" },
-                React.createElement("span", { className: "release-deploy-edd-icon_loading" }),
-                getString('file.testing')))),
+        status === 'testing' && (React.createElement("span", { className: "release-deploy-edd-file-status__message" },
+            React.createElement("span", { className: "release-deploy-edd-icon_loading" }),
+            getString('file.testing'))),
         status === 'ready' && result && (React.createElement("span", { className: "release-deploy-edd-file-status__message" },
             React.createElement("span", { className: "release-deploy-edd-icon_success" }),
             getString('file.ready'),
@@ -65,7 +64,7 @@ export const FileStatus = ({ fileUrl: initialUrl, rootElement }) => {
             errorCode === 'pro_feature' && (React.createElement(React.Fragment, null,
                 ' ',
                 React.createElement(ProBadge, { showWrapper: false, renderAsLink: true, href: window.releaseDeployEDD?.purchaseUrl || '#', text: getString('common.getPro'), status: "default" }))),
-            error && error.toLowerCase().includes('token') && (React.createElement(React.Fragment, null,
+            error?.toLowerCase().includes('token') && (React.createElement(React.Fragment, null,
                 ' ',
                 React.createElement(ProBadge, { showWrapper: false, renderAsLink: true, href: window.releaseDeployEDD?.settingsUrl || '#', text: getString('common.fixIt'), status: "warning" })))))));
 };

@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest'
 import React from 'react'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Mock wp.element.render BEFORE importing the module that uses it
 const mockRender = vi.fn()
@@ -125,7 +125,10 @@ describe('version-sync/init', () => {
     document.body.appendChild(container)
 
     // Mock window.ajaxurl
-    Object.defineProperty(window, 'ajaxurl', { value: 'https://fallback.example.com/ajax', writable: true })
+    Object.defineProperty(window, 'ajaxurl', {
+      value: 'https://fallback.example.com/ajax',
+      writable: true
+    })
 
     initVersionSync()
 

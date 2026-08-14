@@ -1,32 +1,32 @@
-import { defineConfig } from "vitest/config";
-import path from "path";
+import path from 'node:path'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: "jsdom",
-    setupFiles: ["./tests/setup.ts"],
+    environment: 'jsdom',
+    setupFiles: ['./tests/setup.ts'],
     coverage: {
-      provider: "v8",
-      reporter: ["text", "json", "html"],
-      include: ["src/**/*.ts", "src/**/*.tsx"],
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      include: ['src/**/*.ts', 'src/**/*.tsx'],
       exclude: [
-        "node_modules/",
-        "dist/",
-        "tests/",
-        "**/*.d.ts",
-        "**/index.ts",
-        "**/index.tsx",
-        "src/types/**",
-        "src/interfaces/**",
-        "src/constants/**",
-        "src/global.d.ts",
-      ],
-    },
+        'node_modules/',
+        'dist/',
+        'tests/',
+        '**/*.d.ts',
+        '**/index.ts',
+        '**/index.tsx',
+        'src/types/**',
+        'src/interfaces/**',
+        'src/constants/**',
+        'src/global.d.ts'
+      ]
+    }
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
-});
+      '@': path.resolve(__dirname, './src')
+    }
+  }
+})

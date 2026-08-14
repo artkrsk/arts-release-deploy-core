@@ -1,4 +1,4 @@
-import { IAsset, IRelease } from './IGitHub';
+import type { IAsset, IRelease } from './IGitHub';
 /** Props for FileStatus component */
 export interface IFileStatusProps {
     fileUrl: string;

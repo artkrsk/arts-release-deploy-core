@@ -1,9 +1,9 @@
+import { fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { FileStatus } from '@/metabox/FileStatus'
-import type { IFileValidationResult } from '@/interfaces'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GITHUB_PROTOCOL } from '@/constants'
+import type { IFileValidationResult } from '@/interfaces'
+import { FileStatus } from '@/metabox/FileStatus'
 
 // Mock dependencies
 vi.mock('@/hooks/useFileValidation', () => ({
@@ -23,17 +23,21 @@ vi.mock('@/utils/getString', () => ({
 }))
 
 vi.mock('@/components/ProBadge', () => ({
-  ProBadge: vi.fn(({ text, href, status, renderAsLink, showWrapper }) =>
-    React.createElement('a', {
-      href,
-      className: `pro-badge-${status}`,
-      'data-testid': `pro-badge-${status}`
-    }, text)
+  ProBadge: vi.fn(({ text, href, status }) =>
+    React.createElement(
+      'a',
+      {
+        href,
+        className: `pro-badge-${status}`,
+        'data-testid': `pro-badge-${status}`
+      },
+      text
+    )
   )
 }))
 
-import { useFileValidation } from '@/hooks/useFileValidation'
 import { useFileInputMonitor } from '@/hooks/useFileInputMonitor'
+import { useFileValidation } from '@/hooks/useFileValidation'
 import { formatSize } from '@/utils/format'
 
 describe('FileStatus', () => {
@@ -188,7 +192,10 @@ describe('FileStatus', () => {
       const statusElement = document.querySelector('.release-deploy-edd-file-status')
       expect(statusElement).toBeInTheDocument()
 
-      fireEvent.click(statusElement!)
+      if (!statusElement) {
+        throw new Error('status element not found')
+      }
+      fireEvent.click(statusElement)
 
       expect(mockUseFileValidation.testFile).toHaveBeenCalledWith(mockFileUrl)
     })
@@ -226,7 +233,10 @@ describe('FileStatus', () => {
       const statusElement = document.querySelector('.release-deploy-edd-file-status')
       expect(statusElement).toBeInTheDocument()
 
-      fireEvent.click(statusElement!)
+      if (!statusElement) {
+        throw new Error('status element not found')
+      }
+      fireEvent.click(statusElement)
 
       expect(mockUseFileValidation.testFile).toHaveBeenCalledWith(mockFileUrl)
     })

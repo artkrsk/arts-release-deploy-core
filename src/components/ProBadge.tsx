@@ -32,11 +32,7 @@ export const ProBadge = ({
       {badgeText}
     </a>
   ) : (
-    <span
-      className={badgeClassName}
-      role="status"
-      aria-label={`${badgeText} - Pro feature`}
-    >
+    <span className={badgeClassName} role="status" aria-label={`${badgeText} - Pro feature`}>
       {badgeText}
     </span>
   )

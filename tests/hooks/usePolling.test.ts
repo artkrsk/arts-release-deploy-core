@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { usePolling, useTimeouts } from '../../src/hooks/usePolling'
 
 describe('usePolling', () => {
@@ -45,10 +45,9 @@ describe('usePolling', () => {
 
   it('should stop polling when enabled changes to false', () => {
     const callback = vi.fn()
-    const { rerender } = renderHook(
-      ({ enabled }) => usePolling(callback, 1000, enabled),
-      { initialProps: { enabled: true } }
-    )
+    const { rerender } = renderHook(({ enabled }) => usePolling(callback, 1000, enabled), {
+      initialProps: { enabled: true }
+    })
 
     // Polling should work
     act(() => {
@@ -69,10 +68,9 @@ describe('usePolling', () => {
 
   it('should restart polling when interval changes', () => {
     const callback = vi.fn()
-    const { rerender } = renderHook(
-      ({ interval }) => usePolling(callback, interval, true),
-      { initialProps: { interval: 1000 } }
-    )
+    const { rerender } = renderHook(({ interval }) => usePolling(callback, interval, true), {
+      initialProps: { interval: 1000 }
+    })
 
     act(() => {
       vi.advanceTimersByTime(1000)
@@ -94,10 +92,9 @@ describe('usePolling', () => {
     const callback1 = vi.fn()
     const callback2 = vi.fn()
 
-    const { rerender } = renderHook(
-      ({ cb }) => usePolling(cb, 1000, true),
-      { initialProps: { cb: callback1 } }
-    )
+    const { rerender } = renderHook(({ cb }) => usePolling(cb, 1000, true), {
+      initialProps: { cb: callback1 }
+    })
 
     // First callback should be called
     act(() => {
@@ -198,10 +195,9 @@ describe('usePolling', () => {
 
   it('should clear existing interval when changing from active to disabled', () => {
     const callback = vi.fn()
-    const { rerender } = renderHook(
-      ({ interval }) => usePolling(callback, interval, true),
-      { initialProps: { interval: 1000 } }
-    )
+    const { rerender } = renderHook(({ interval }) => usePolling(callback, interval, true), {
+      initialProps: { interval: 1000 }
+    })
 
     // Let interval be created and fire once
     act(() => {

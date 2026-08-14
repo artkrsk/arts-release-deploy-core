@@ -1,4 +1,4 @@
-import { TSyncStatus } from '../types';
+import type { TSyncStatus } from '../types';
 /** Sync controls component props */
 export interface ISyncControlsProps {
     /** Callback for sync button click */

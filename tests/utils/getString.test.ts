@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { getString } from '../../src/utils/getString'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { TRANSLATION_FALLBACKS } from '../../src/constants/TRANSLATION_FALLBACKS'
+import { getString } from '../../src/utils/getString'
 
 describe('getString', () => {
   // Store original window.releaseDeployEDD
@@ -13,13 +13,13 @@ describe('getString', () => {
 
   afterEach(() => {
     // Restore original window object
-    (global as any).window.releaseDeployEDD = originalWindow
+    ;(global as any).window.releaseDeployEDD = originalWindow
   })
 
   describe('when translations are available from backend', () => {
     it('should return translated string from window.releaseDeployEDD', () => {
       // Setup mock translations
-      (global as any).window.releaseDeployEDD = {
+      ;(global as any).window.releaseDeployEDD = {
         strings: {
           'common.getPro': 'Obtenir Pro',
           'token.checking': 'Vérification de la connexion...'
@@ -32,7 +32,7 @@ describe('getString', () => {
 
     it('should handle partial translations and use fallbacks for missing keys', () => {
       // Setup partial translations
-      (global as any).window.releaseDeployEDD = {
+      ;(global as any).window.releaseDeployEDD = {
         strings: {
           'common.getPro': 'Obtener Pro' // Spanish
         }
@@ -49,7 +49,7 @@ describe('getString', () => {
   describe('when window.releaseDeployEDD is not defined', () => {
     it('should return fallback translation', () => {
       // Clear window.releaseDeployEDD
-      (global as any).window.releaseDeployEDD = undefined
+      ;(global as any).window.releaseDeployEDD = undefined
 
       expect(getString('common.getPro')).toBe('Get Pro')
       expect(getString('token.checking')).toBe('Checking connection...')
@@ -60,7 +60,7 @@ describe('getString', () => {
   describe('when window.releaseDeployEDD.strings is not defined', () => {
     it('should return fallback translation', () => {
       // Setup window without strings
-      (global as any).window.releaseDeployEDD = {
+      ;(global as any).window.releaseDeployEDD = {
         ajaxUrl: '/wp-admin/admin-ajax.php'
       }
 
@@ -72,7 +72,7 @@ describe('getString', () => {
   describe('when translation key exists but value is empty', () => {
     it('should return empty string from backend', () => {
       // Setup with empty string value
-      (global as any).window.releaseDeployEDD = {
+      ;(global as any).window.releaseDeployEDD = {
         strings: {
           'common.getPro': '' // Empty string from backend
         }
@@ -84,7 +84,7 @@ describe('getString', () => {
 
     it('should return non-empty string from backend', () => {
       // Setup with space value
-      (global as any).window.releaseDeployEDD = {
+      ;(global as any).window.releaseDeployEDD = {
         strings: {
           'common.getPro': ' ' // Space is truthy
         }
@@ -97,7 +97,7 @@ describe('getString', () => {
   describe('fallback translations', () => {
     beforeEach(() => {
       // Clear translations for fallback testing
-      (global as any).window.releaseDeployEDD = undefined
+      ;(global as any).window.releaseDeployEDD = undefined
     })
 
     it('should provide all token field fallbacks', () => {
@@ -140,7 +140,7 @@ describe('getString', () => {
 
   describe('edge cases', () => {
     it('should handle invalid key that exists in neither backend nor fallbacks', () => {
-      (global as any).window.releaseDeployEDD = {
+      ;(global as any).window.releaseDeployEDD = {
         strings: {}
       }
 
@@ -150,7 +150,7 @@ describe('getString', () => {
     })
 
     it('should handle null strings object', () => {
-      (global as any).window.releaseDeployEDD = {
+      ;(global as any).window.releaseDeployEDD = {
         strings: null
       }
 
@@ -158,7 +158,7 @@ describe('getString', () => {
     })
 
     it('should handle undefined value in strings object', () => {
-      (global as any).window.releaseDeployEDD = {
+      ;(global as any).window.releaseDeployEDD = {
         strings: {
           'common.getPro': undefined
         }

@@ -2,9 +2,9 @@
  * Changelog Sync - Free Version (Badge Only)
  */
 import React from 'react'
+import { ProBadge } from '../components'
 import type { IChangelogSyncProps } from '../interfaces'
 import { getString } from '../utils'
-import { ProBadge } from '../components'
 
 export const ChangelogSync = (_props: IChangelogSyncProps): JSX.Element => {
   const purchaseUrl = window.releaseDeployEDD?.purchaseUrl || ''

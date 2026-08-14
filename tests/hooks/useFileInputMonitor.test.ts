@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { EDD_SELECTORS, GITHUB_PROTOCOL, INTERVALS } from '@/constants'
 import { useFileInputMonitor } from '@/hooks/useFileInputMonitor'
-import { GITHUB_PROTOCOL, INTERVALS, EDD_SELECTORS } from '@/constants'
 
 describe('useFileInputMonitor', () => {
   const mockInitialUrl = 'https://example.com/file.zip'
@@ -220,7 +220,7 @@ describe('useFileInputMonitor', () => {
 
   describe('edge cases', () => {
     it('should handle very long URLs', () => {
-      const longUrl = 'https://example.com/' + 'a'.repeat(1000)
+      const longUrl = `https://example.com/${'a'.repeat(1000)}`
 
       expect(() => {
         renderHook(() =>
@@ -234,7 +234,8 @@ describe('useFileInputMonitor', () => {
     })
 
     it('should handle special characters in URLs', () => {
-      const specialUrl = 'https://example.com/file-with-special-chars_123.zip?param=value&other=test'
+      const specialUrl =
+        'https://example.com/file-with-special-chars_123.zip?param=value&other=test'
 
       expect(() => {
         renderHook(() =>
@@ -249,7 +250,9 @@ describe('useFileInputMonitor', () => {
 
     it('should handle concurrent calls to onUrlChange', () => {
       let callCount = 0
-      const countingCallback = () => { callCount++ }
+      const countingCallback = () => {
+        callCount++
+      }
 
       renderHook(() =>
         useFileInputMonitor({

@@ -6,5 +6,5 @@ import type { IUseFileValidationConfig, IUseFileValidationReturn } from '../inte
  * @param config - Configuration object
  * @returns File validation state and functions
  */
-export declare function useFileValidation({ fileUrl, ajaxUrl, nonce, enabled, gitHubService }: IUseFileValidationConfig): IUseFileValidationReturn;
+export declare function useFileValidation({ fileUrl, ajaxUrl, nonce, gitHubService }: IUseFileValidationConfig): IUseFileValidationReturn;
 //# sourceMappingURL=useFileValidation.d.ts.map

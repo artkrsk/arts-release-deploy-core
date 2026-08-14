@@ -11,81 +11,81 @@ import { EDD_SELECTORS } from '../constants'
  * Inject Version Sync UI next to the version field
  */
 export function injectVersionSyncUI(): void {
-  const metaboxData = window.releaseDeployEDD?.contexts?.metabox;
+  const metaboxData = window.releaseDeployEDD?.contexts?.metabox
 
   if (!metaboxData?.versionSync?.enabled) {
-    return;
+    return
   }
 
   // Wait for EDD SL metabox to render
   setTimeout(() => {
-    const versionField = document.querySelector(EDD_SELECTORS.VERSION_FIELD) as HTMLElement;
+    const versionField = document.querySelector(EDD_SELECTORS.VERSION_FIELD) as HTMLElement
     if (!versionField) {
-      return;
+      return
     }
 
     // Determine if this is Pro or Lite (Lite shows Pro badges)
-    const isPro = window.releaseDeployEDD?.features?.versionSync || false;
-    const rootSuffix = isPro ? 'pro' : 'free';
+    const isPro = window.releaseDeployEDD?.features?.versionSync || false
+    const rootSuffix = isPro ? 'pro' : 'free'
 
     // Create root element for React component
-    const rootElement = document.createElement('div');
-    rootElement.id = `release-deploy-edd-version-sync-${rootSuffix}-root`;
-    rootElement.className = 'release-deploy-edd-sync-root';
+    const rootElement = document.createElement('div')
+    rootElement.id = `release-deploy-edd-version-sync-${rootSuffix}-root`
+    rootElement.className = 'release-deploy-edd-sync-root'
 
     // Insert after the version field
     // Try to find the text node (&nbsp;) after the input
-    const nextNode = versionField.nextSibling;
+    const nextNode = versionField.nextSibling
     if (nextNode && nextNode.nodeType === Node.TEXT_NODE) {
       // Text node (the &nbsp;)
-      versionField.parentNode?.insertBefore(rootElement, nextNode.nextSibling);
+      versionField.parentNode?.insertBefore(rootElement, nextNode.nextSibling)
     } else {
-      versionField.parentNode?.insertBefore(rootElement, versionField.nextSibling);
+      versionField.parentNode?.insertBefore(rootElement, versionField.nextSibling)
     }
 
     // Trigger event to initialize React component
-    document.dispatchEvent(new CustomEvent('release-deploy-edd-version-sync-ready'));
-  }, 100);
+    document.dispatchEvent(new CustomEvent('release-deploy-edd-version-sync-ready'))
+  }, 100)
 }
 
 /**
  * Inject Changelog Sync UI next to the changelog field
  */
 export function injectChangelogSyncUI(): void {
-  const metaboxData = window.releaseDeployEDD?.contexts?.metabox;
+  const metaboxData = window.releaseDeployEDD?.contexts?.metabox
 
   if (!metaboxData?.changelogSync?.enabled) {
-    return;
+    return
   }
 
-  const changelogSyncData = metaboxData.changelogSync;
+  const _changelogSyncData = metaboxData.changelogSync
 
   // Wait for EDD SL metabox to render
   setTimeout(() => {
-    const changelogField = document.querySelector(EDD_SELECTORS.CHANGELOG_FIELD) as HTMLElement;
+    const changelogField = document.querySelector(EDD_SELECTORS.CHANGELOG_FIELD) as HTMLElement
     if (!changelogField) {
-      return;
+      return
     }
 
     // Determine if this is Pro or Lite (Lite shows Pro badges)
-    const isPro = window.releaseDeployEDD?.features?.changelogSync || false;
-    const rootSuffix = isPro ? 'pro' : 'free';
+    const isPro = window.releaseDeployEDD?.features?.changelogSync || false
+    const rootSuffix = isPro ? 'pro' : 'free'
 
     // Create root element for React component
-    const rootElement = document.createElement('div');
-    rootElement.id = `release-deploy-edd-changelog-sync-${rootSuffix}-root`;
-    rootElement.className = 'release-deploy-edd-sync-root';
+    const rootElement = document.createElement('div')
+    rootElement.id = `release-deploy-edd-changelog-sync-${rootSuffix}-root`
+    rootElement.className = 'release-deploy-edd-sync-root'
 
     // Insert after the changelog label
-    const changelogLabel = document.querySelector(EDD_SELECTORS.CHANGELOG_LABEL) as HTMLElement;
+    const changelogLabel = document.querySelector(EDD_SELECTORS.CHANGELOG_LABEL) as HTMLElement
     if (changelogLabel) {
-      changelogLabel.appendChild(rootElement);
+      changelogLabel.appendChild(rootElement)
     } else {
       // Fallback: insert after the field itself
-      changelogField.parentNode?.insertBefore(rootElement, changelogField.nextSibling);
+      changelogField.parentNode?.insertBefore(rootElement, changelogField.nextSibling)
     }
 
     // Trigger event to initialize React component
-    document.dispatchEvent(new CustomEvent('release-deploy-edd-changelog-sync-ready'));
-  }, 100);
+    document.dispatchEvent(new CustomEvent('release-deploy-edd-changelog-sync-ready'))
+  }, 100)
 }

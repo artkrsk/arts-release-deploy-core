@@ -7,7 +7,7 @@ export function parseGitHubUrl(url: string): {
   release?: string
   filename?: string
 } | null {
-  if (!url || !url.startsWith(GITHUB_PROTOCOL)) {
+  if (!url?.startsWith(GITHUB_PROTOCOL)) {
     return null
   }
 
@@ -27,10 +27,6 @@ export function parseGitHubUrl(url: string): {
 }
 
 /** Build GitHub URL from components */
-export function buildGitHubUrl(
-  repo: string,
-  release: string | 'latest',
-  filename: string
-): string {
+export function buildGitHubUrl(repo: string, release: string | 'latest', filename: string): string {
   return `${GITHUB_PROTOCOL}${repo}/${release}/${filename}`
 }

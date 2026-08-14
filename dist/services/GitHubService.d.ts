@@ -1,4 +1,4 @@
-import { IRateLimit } from '../interfaces';
+import type { IRateLimit } from '../interfaces';
 interface TestFileResponse {
     size: number;
     exists: boolean;

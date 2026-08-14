@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { EDD_SELECTORS, GITHUB_PROTOCOL, INTERVALS } from '@/constants'
 import { useGitHubFiles } from '@/hooks/useGitHubFiles'
-import { GITHUB_PROTOCOL, INTERVALS, EDD_SELECTORS } from '@/constants'
 
 describe('useGitHubFiles', () => {
   const mockGitHubUrl = `${GITHUB_PROTOCOL}owner/repo/v1.0.0/release.zip`

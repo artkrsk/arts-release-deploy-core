@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { GitHubService } from '../services';
 /**
  * Custom hook for GitHub token validation and rate limit fetching
@@ -31,7 +31,7 @@ export function useTokenValidation({ initialToken, ajaxUrl, nonce, isConstantDef
                 setRateLimit(null);
             }
         }
-        catch (error) {
+        catch (_error) {
             setStatus('invalid');
             setRateLimit(null);
         }
@@ -49,7 +49,7 @@ export function useTokenValidation({ initialToken, ajaxUrl, nonce, isConstantDef
         try {
             await validateToken(token);
         }
-        catch (error) {
+        catch (_error) {
             // Error handling is done in validateToken
         }
         finally {

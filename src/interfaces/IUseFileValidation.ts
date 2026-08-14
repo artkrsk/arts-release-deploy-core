@@ -1,5 +1,5 @@
-import type { TStatusState } from '../types'
 import type { GitHubService } from '../services'
+import type { TStatusState } from '../types'
 
 /** Configuration for file validation hook */
 export interface IUseFileValidationConfig {

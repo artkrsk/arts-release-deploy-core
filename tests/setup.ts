@@ -1,4 +1,4 @@
-import { expect, vi } from 'vitest'
+import { vi } from 'vitest'
 import '@testing-library/jest-dom'
 import React from 'react'
 
@@ -32,30 +32,43 @@ global.wp = {
         type,
         value: value || '',
         disabled,
-        onChange: (e: any) => onChange && onChange(e.target.value),
+        onChange: (e: any) => onChange?.(e.target.value),
         ...props
       })
     }),
     Button: vi.fn(({ children, onClick, variant = 'primary', disabled = false, ...props }) => {
-      return React.createElement('button', {
-        'data-testid': `button-${variant}`,
-        onClick,
-        disabled,
-        ...props
-      }, children)
+      return React.createElement(
+        'button',
+        {
+          type: 'button',
+          'data-testid': `button-${variant}`,
+          onClick,
+          disabled,
+          ...props
+        },
+        children
+      )
     }),
     Notice: vi.fn(({ children, status = 'info', onRemove, ...props }) => {
-      return React.createElement('div', {
-        'data-testid': `notice-${status}`,
-        className: `components-notice is-${status}`,
-        ...props
-      }, children)
+      return React.createElement(
+        'div',
+        {
+          'data-testid': `notice-${status}`,
+          className: `components-notice is-${status}`,
+          ...props
+        },
+        children
+      )
     }),
     BaseControl: vi.fn(({ label, children, ...props }) => {
-      return React.createElement('div', {
-        'data-testid': 'base-control',
-        ...props
-      }, [label && React.createElement('label', { key: 'label' }, label), children])
+      return React.createElement(
+        'div',
+        {
+          'data-testid': 'base-control',
+          ...props
+        },
+        [label && React.createElement('label', { key: 'label' }, label), children]
+      )
     })
   }
 }

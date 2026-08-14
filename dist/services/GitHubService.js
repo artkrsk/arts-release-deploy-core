@@ -41,6 +41,9 @@ class GitHubServiceClass {
             }
             throw error;
         }
+        if (data.data === undefined) {
+            throw new Error('Test succeeded but returned no data');
+        }
         return data.data;
     }
     /** Test GitHub token connection */
@@ -69,7 +72,7 @@ class GitHubServiceClass {
             }
             return data.data?.rate_limit || null;
         }
-        catch (error) {
+        catch (_error) {
             return null;
         }
     }

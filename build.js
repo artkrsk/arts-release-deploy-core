@@ -1,6 +1,6 @@
+import { mkdir, writeFile } from 'node:fs/promises'
 import * as esbuild from 'esbuild'
 import * as sass from 'sass'
-import { writeFile, mkdir } from 'fs/promises'
 
 // Bundle the ESM output
 await esbuild.build({
@@ -42,11 +42,10 @@ try {
   // List all loaded files for verification
   if (result.loadedUrls.length > 0) {
     console.log('📋 Compiled files:')
-    result.loadedUrls.forEach(url => {
+    result.loadedUrls.forEach((url) => {
       console.log(`   - ${url.pathname}`)
     })
   }
-
 } catch (error) {
   console.error('❌ SASS compilation failed:', error)
   process.exit(1)

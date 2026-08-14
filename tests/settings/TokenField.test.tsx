@@ -1,8 +1,8 @@
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import React from 'react'
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { TokenField } from '@/settings/TokenField'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { IRateLimit } from '@/interfaces'
+import { TokenField } from '@/settings/TokenField'
 import type { TValidationStatus } from '@/types'
 
 // Mock dependencies
@@ -95,7 +95,9 @@ describe('TokenField', () => {
     it('should render hidden input for form submission', () => {
       render(<TokenField initialValue="github_pat_123" onChange={mockOnChange} />)
 
-      const hiddenInput = document.querySelector('input[name="edd_settings[edd_release_deploy_token]"]')
+      const hiddenInput = document.querySelector(
+        'input[name="edd_settings[edd_release_deploy_token]"]'
+      )
       expect(hiddenInput).toBeInTheDocument()
       expect(hiddenInput).toHaveAttribute('value', 'github_pat_123')
     })
@@ -127,7 +129,9 @@ describe('TokenField', () => {
     it('should not render hidden input', () => {
       render(<TokenField initialValue="" onChange={mockOnChange} />)
 
-      const hiddenInput = document.querySelector('input[name="edd_settings[edd_release_deploy_token]"]')
+      const hiddenInput = document.querySelector(
+        'input[name="edd_settings[edd_release_deploy_token]"]'
+      )
       expect(hiddenInput).not.toBeInTheDocument()
     })
   })

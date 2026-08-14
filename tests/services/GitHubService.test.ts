@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createGitHubService, GitHubService, type Fetcher } from '../../src/services/GitHubService'
+import { describe, expect, it, vi } from 'vitest'
+import { createGitHubService, type Fetcher, GitHubService } from '../../src/services/GitHubService'
 
 describe('GitHubService', () => {
   describe('testFile', () => {
@@ -89,12 +89,18 @@ describe('GitHubService', () => {
       })
 
       const service = createGitHubService(mockFetch)
-      await service.testFile('https://example.com/ajax', 'nonce123', 'edd-release-deploy://owner/repo/v1.0.0/file.zip')
+      await service.testFile(
+        'https://example.com/ajax',
+        'nonce123',
+        'edd-release-deploy://owner/repo/v1.0.0/file.zip'
+      )
 
       expect(capturedFormData).toBeInstanceOf(FormData)
-      expect(capturedFormData!.get('action')).toBe('edd_release_deploy_test_file')
-      expect(capturedFormData!.get('nonce')).toBe('nonce123')
-      expect(capturedFormData!.get('file_url')).toBe('edd-release-deploy://owner/repo/v1.0.0/file.zip')
+      expect(capturedFormData?.get('action')).toBe('edd_release_deploy_test_file')
+      expect(capturedFormData?.get('nonce')).toBe('nonce123')
+      expect(capturedFormData?.get('file_url')).toBe(
+        'edd-release-deploy://owner/repo/v1.0.0/file.zip'
+      )
     })
 
     it('should use default error message when message is not provided', async () => {
@@ -139,7 +145,11 @@ describe('GitHubService', () => {
       })
 
       const service = createGitHubService(mockFetch)
-      const result = await service.testConnection('https://example.com/ajax', 'nonce123', 'gh_token123')
+      const result = await service.testConnection(
+        'https://example.com/ajax',
+        'nonce123',
+        'gh_token123'
+      )
 
       expect(result).toBe(true)
     })
@@ -150,7 +160,11 @@ describe('GitHubService', () => {
       })
 
       const service = createGitHubService(mockFetch)
-      const result = await service.testConnection('https://example.com/ajax', 'nonce123', 'invalid_token')
+      const result = await service.testConnection(
+        'https://example.com/ajax',
+        'nonce123',
+        'invalid_token'
+      )
 
       expect(result).toBe(false)
     })
@@ -168,9 +182,9 @@ describe('GitHubService', () => {
       await service.testConnection('https://example.com/ajax', 'nonce123', 'gh_token123')
 
       expect(capturedFormData).toBeInstanceOf(FormData)
-      expect(capturedFormData!.get('action')).toBe('edd_release_deploy_test_connection')
-      expect(capturedFormData!.get('nonce')).toBe('nonce123')
-      expect(capturedFormData!.get('token')).toBe('gh_token123')
+      expect(capturedFormData?.get('action')).toBe('edd_release_deploy_test_connection')
+      expect(capturedFormData?.get('nonce')).toBe('nonce123')
+      expect(capturedFormData?.get('token')).toBe('gh_token123')
     })
   })
 
@@ -253,8 +267,8 @@ describe('GitHubService', () => {
       await service.getRateLimit('https://example.com/ajax', 'nonce123')
 
       expect(capturedFormData).toBeInstanceOf(FormData)
-      expect(capturedFormData!.get('action')).toBe('edd_release_deploy_get_rate_limit')
-      expect(capturedFormData!.get('nonce')).toBe('nonce123')
+      expect(capturedFormData?.get('action')).toBe('edd_release_deploy_get_rate_limit')
+      expect(capturedFormData?.get('nonce')).toBe('nonce123')
     })
   })
 

@@ -1,5 +1,5 @@
-import type { ErrorContext } from '../types';
 import type { ErrorOptions } from '../interfaces';
+import type { ErrorContext } from '../types';
 /**
  * Centralized error handler for consistent error logging and user notification
  * Text-domain agnostic for use in both Lite and Pro versions
