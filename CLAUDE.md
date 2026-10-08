@@ -15,7 +15,7 @@ pnpm, Node >= 23.
 
 - `pnpm build` — `tsc` emits declarations + JS to `dist/`, then `build.js` (esbuild) bundles ESM to
   `dist/index.js` with **react/react-dom external**, and compiles `src/styles/index.sass` to
-  `dist/index.css`. (`dev` is expected to be running already — don't start it.)
+  `dist/index.css`. (Check for an existing dev/build process before starting; serialize shared outputs.)
 - `pnpm test` / `pnpm test:watch` / `pnpm test:coverage` — vitest (jsdom).
 - Typecheck gate: `pnpm exec tsc --noEmit`. There is no lint script.
 
