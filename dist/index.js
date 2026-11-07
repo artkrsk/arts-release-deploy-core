@@ -1367,8 +1367,10 @@ var GitHubServiceClass = class {
     return data.success;
   }
   /** Get GitHub API rate limit */
-  async getRateLimit(ajaxUrl, nonce) {
-    const formData = this.createFormData(this.actions.GET_RATE_LIMIT, nonce);
+  async getRateLimit(ajaxUrl, nonce, token = "") {
+    const formData = this.createFormData(this.actions.GET_RATE_LIMIT, nonce, {
+      token
+    });
     try {
       const response = await this.fetcher(ajaxUrl, {
         method: "POST",
@@ -1646,7 +1648,7 @@ function useTokenValidation({
       const isValid = await gitHubService.testConnection(ajaxUrl, nonce, token || "");
       setStatus(isValid ? "valid" : "invalid");
       if (isValid) {
-        const limit = await gitHubService.getRateLimit(ajaxUrl, nonce);
+        const limit = await gitHubService.getRateLimit(ajaxUrl, nonce, token || "");
         setRateLimit(limit);
       } else {
         setRateLimit(null);

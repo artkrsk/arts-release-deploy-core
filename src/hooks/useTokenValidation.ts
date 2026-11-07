@@ -42,7 +42,7 @@ export function useTokenValidation({
 
       // Fetch rate limit if connection is valid
       if (isValid) {
-        const limit = await gitHubService.getRateLimit(ajaxUrl, nonce)
+        const limit = await gitHubService.getRateLimit(ajaxUrl, nonce, token || '')
         setRateLimit(limit)
       } else {
         setRateLimit(null)

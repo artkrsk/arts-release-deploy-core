@@ -27,7 +27,7 @@ declare class GitHubServiceClass {
     /** Test GitHub token connection */
     testConnection(ajaxUrl: string, nonce: string, token: string): Promise<boolean>;
     /** Get GitHub API rate limit */
-    getRateLimit(ajaxUrl: string, nonce: string): Promise<IRateLimit | null>;
+    getRateLimit(ajaxUrl: string, nonce: string, token?: string): Promise<IRateLimit | null>;
 }
 /**
  * GitHubService - Static-like API for backward compatibility
@@ -36,7 +36,7 @@ declare class GitHubServiceClass {
 export declare const GitHubService: {
     readonly testFile: (ajaxUrl: string, nonce: string, fileUrl: string, signal?: AbortSignal) => Promise<TestFileResponse>;
     readonly testConnection: (ajaxUrl: string, nonce: string, token: string) => Promise<boolean>;
-    readonly getRateLimit: (ajaxUrl: string, nonce: string) => Promise<IRateLimit | null>;
+    readonly getRateLimit: (ajaxUrl: string, nonce: string, token?: string) => Promise<IRateLimit | null>;
 };
 /**
  * Factory function for creating custom instances (mainly for testing)

@@ -59,8 +59,10 @@ class GitHubServiceClass {
         return data.success;
     }
     /** Get GitHub API rate limit */
-    async getRateLimit(ajaxUrl, nonce) {
-        const formData = this.createFormData(this.actions.GET_RATE_LIMIT, nonce);
+    async getRateLimit(ajaxUrl, nonce, token = '') {
+        const formData = this.createFormData(this.actions.GET_RATE_LIMIT, nonce, {
+            token
+        });
         try {
             const response = await this.fetcher(ajaxUrl, {
                 method: 'POST',

@@ -121,7 +121,7 @@ describe('useTokenValidation', () => {
         mockNonce,
         mockToken
       )
-      expect(mockGitHubService.getRateLimit).toHaveBeenCalledWith(mockAjaxUrl, mockNonce)
+      expect(mockGitHubService.getRateLimit).toHaveBeenCalledWith(mockAjaxUrl, mockNonce, mockToken)
     })
 
     it('should handle invalid token', async () => {
